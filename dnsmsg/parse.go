@@ -3,18 +3,25 @@ package dnsmsg
 import "encoding/binary"
 
 func Parse(d []byte) (*Message, error) {
-	c := &context{rawMsg: d}
-
 	msg := &Message{}
+	err := msg.UnmarshalBinary(d)
+	if err != nil {
+		return nil, err
+	}
+	return msg, nil
+}
+
+func (msg *Message) UnmarshalBinary(d []byte) error {
+	c := &context{rawMsg: d}
 
 	// read stuff
 	err := binary.Read(c, binary.BigEndian, &msg.ID)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = binary.Read(c, binary.BigEndian, &msg.Bits)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	// count of the various types
@@ -22,49 +29,49 @@ func Parse(d []byte) (*Message, error) {
 
 	err = binary.Read(c, binary.BigEndian, &QD)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = binary.Read(c, binary.BigEndian, &AN)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = binary.Read(c, binary.BigEndian, &NS)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	err = binary.Read(c, binary.BigEndian, &AR)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	for i := 0; i < int(QD); i++ {
 		q, err := c.parseQuestion()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		msg.Question = append(msg.Question, q)
 	}
 	for i := 0; i < int(AN); i++ {
 		r, err := c.parseResource()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		msg.Answer = append(msg.Answer, r)
 	}
 	for i := 0; i < int(NS); i++ {
 		r, err := c.parseResource()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		msg.Authority = append(msg.Authority, r)
 	}
 	for i := 0; i < int(AR); i++ {
 		r, err := c.parseResource()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		msg.Additional = append(msg.Additional, r)
 	}
 
-	return msg, nil
+	return nil
 }

@@ -26,3 +26,16 @@ func (c *context) parseQuestion() (*Question, error) {
 
 	return q, nil
 }
+
+func (q *Question) encode(c *context) error {
+	err := c.appendLabel(q.Name)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(c, binary.BigEndian, q.Type)
+	if err != nil {
+		return err
+	}
+	return binary.Write(c, binary.BigEndian, q.Class)
+}

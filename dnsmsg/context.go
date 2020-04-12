@@ -29,6 +29,15 @@ func (c *context) Read(p []byte) (int, error) {
 	return n, nil
 }
 
+func (c *context) Len() int {
+	return len(c.rawMsg)
+}
+
+func (c *context) putUint16(pos int, v uint16) {
+	// simple overwrite function
+	binary.BigEndian.PutUint16(c.rawMsg[pos:pos+2], v)
+}
+
 func (c *context) readLen(l int) ([]byte, error) {
 	if l == 0 {
 		// shouldn't happen, but...
