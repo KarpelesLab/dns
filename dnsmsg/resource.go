@@ -1,6 +1,10 @@
 package dnsmsg
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"strconv"
+	"strings"
+)
 
 type Resource struct {
 	Name  string
@@ -88,4 +92,8 @@ func (r *Resource) encode(c *context) error {
 	c.putUint16(pos, uint16(rdlen))
 
 	return nil
+}
+
+func (r *Resource) String() string {
+	return strings.Join([]string{r.Name, r.Class.String(), r.Type.String(), strconv.FormatUint(uint64(r.TTL), 10), r.Data.String()}, " ")
 }

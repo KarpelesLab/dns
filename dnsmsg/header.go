@@ -1,5 +1,7 @@
 package dnsmsg
 
+import "strings"
+
 type HeaderBits uint16
 
 const (
@@ -87,4 +89,29 @@ func (h HeaderBits) GetRCode() RCode {
 
 func (h *HeaderBits) SetRCode(rc RCode) {
 	*h = (*h & ^HeaderBits(0xf)) | HeaderBits(rc)
+}
+
+func (h HeaderBits) String() string {
+	res := []string{
+		h.OpCode().String(),
+	}
+
+	if h.IsQuery() {
+		res = append(res, "qr")
+	}
+	if h.IsAuth() {
+		res = append(res, "aa")
+	}
+	if h.IsTrunc() {
+		res = append(res, "tc")
+	}
+	if h.IsRecDesired() {
+		res = append(res, "rd")
+	}
+	if h.IsRecAvailable() {
+		res = append(res, "ra")
+	}
+	res = append(res, h.GetRCode().String())
+
+	return strings.Join(res, " ")
 }

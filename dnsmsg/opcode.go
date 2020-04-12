@@ -1,5 +1,7 @@
 package dnsmsg
 
+//go:generate stringer -type=OpCode
+
 type OpCode byte
 
 const (

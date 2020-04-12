@@ -1,6 +1,9 @@
 package dnsmsg
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"fmt"
+)
 
 type RData interface {
 	// TODO
@@ -97,6 +100,13 @@ func (c *context) parseRData(t Type, d []byte) (RData, error) {
 			return nil, ErrInvalidLen
 		}
 		return &RDataIP{d, t}, nil
+	// RFC 6891
+	case OPT:
+		res := &RDataOPT{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
 	}
-	return nil, ErrNotSupport
+	return nil, fmt.Errorf("while parsing %s: %w", t.String(), ErrNotSupport)
 }

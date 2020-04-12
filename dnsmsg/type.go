@@ -1,5 +1,7 @@
 package dnsmsg
 
+//go:generate stringer -type=Type
+
 type Type uint16
 
 const (

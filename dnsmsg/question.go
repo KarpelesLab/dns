@@ -1,6 +1,9 @@
 package dnsmsg
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+	"strings"
+)
 
 type Question struct {
 	Name  string
@@ -38,4 +41,8 @@ func (q *Question) encode(c *context) error {
 		return err
 	}
 	return binary.Write(c, binary.BigEndian, q.Class)
+}
+
+func (q *Question) String() string {
+	return strings.Join([]string{q.Name, q.Class.String(), q.Type.String()}, " ")
 }

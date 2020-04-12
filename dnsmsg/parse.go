@@ -1,6 +1,8 @@
 package dnsmsg
 
-import "encoding/binary"
+import (
+	"encoding/binary"
+)
 
 func Parse(d []byte) (*Message, error) {
 	msg := &Message{}
@@ -69,6 +71,14 @@ func (msg *Message) UnmarshalBinary(d []byte) error {
 		r, err := c.parseResource()
 		if err != nil {
 			return err
+		}
+		if r.Type == OPT {
+			// RFC 6891 - Special case
+			msg.HasEDNS = true
+			msg.Opts = r.Data.(*RDataOPT).Opts
+			msg.ReqUDPSize = uint16(r.Class)
+			msg.OptRCode = OptRCode(r.TTL)
+			continue
 		}
 		msg.Additional = append(msg.Additional, r)
 	}
