@@ -2,7 +2,7 @@
 
 Various elements important to DNS are included in this (or planned to, this is work in progress).
 
-* `dnsmsg`: parse and generate DNS messages
+* [`dnsmsg`](https://godoc.org/github.com/KarpelesLab/dns/dnsmsg): parse and generate DNS messages
 
 # Sources
 
