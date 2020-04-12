@@ -1,6 +1,6 @@
 package dnsmsg
 
-type Class byte
+type Class uint16
 
 const (
 	// RFC 1035

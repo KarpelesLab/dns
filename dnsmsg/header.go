@@ -80,3 +80,11 @@ func (h *HeaderBits) SetRecAvailable(reca bool) {
 		*h &= ^hRecA
 	}
 }
+
+func (h HeaderBits) GetRCode() RCode {
+	return RCode(h & 0xf)
+}
+
+func (h *HeaderBits) SetRCode(rc RCode) {
+	*h = (*h & ^HeaderBits(0xf)) | HeaderBits(rc)
+}
