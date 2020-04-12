@@ -86,6 +86,20 @@ func (c *context) appendLabel(lbl string) error {
 	}
 }
 
+func (c *context) parseLabel() (string, error) {
+	// read label at current position
+	if c.rpos >= len(c.rawMsg) {
+		return "", io.EOF
+	}
+	lbl, n, err := c.readLabel(c.rawMsg[c.rpos:])
+	if err != nil {
+		return lbl, err
+	}
+
+	c.rpos += n
+	return lbl, err
+}
+
 func (c *context) readLabel(buf []byte) (string, int, error) {
 	var res []byte
 	var read int

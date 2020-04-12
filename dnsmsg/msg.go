@@ -5,8 +5,8 @@ type Message struct {
 	ID   uint16
 	Bits HeaderBits
 
-	// Question (QD)
-	// Answer (AN)
-	// Authority (NS)
-	// Additional (AR)
+	Question   []*Question // QD
+	Answer     []*Resource // AN
+	Authority  []*Resource // NS
+	Additional []*Resource // AR
 }
