@@ -20,44 +20,49 @@ func (c *context) parseRData(t Type, d []byte) (RData, error) {
 		}
 		return &RDataIP{d, t}, nil
 	case NS:
-		lbl, err := c.readLabel(d)
+		lbl, _, err := c.readLabel(d)
 		if err != nil {
 			return nil, err
 		}
 		return &RDataLabel{lbl, t}, nil
 	case MD:
-		lbl, err := c.readLabel(d)
+		lbl, _, err := c.readLabel(d)
 		if err != nil {
 			return nil, err
 		}
 		return &RDataLabel{lbl, t}, nil
 	case MF:
-		lbl, err := c.readLabel(d)
+		lbl, _, err := c.readLabel(d)
 		if err != nil {
 			return nil, err
 		}
 		return &RDataLabel{lbl, t}, nil
 	case CNAME:
-		lbl, err := c.readLabel(d)
+		lbl, _, err := c.readLabel(d)
 		if err != nil {
 			return nil, err
 		}
 		return &RDataLabel{lbl, t}, nil
 	case SOA:
+		res := &RDataSOA{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
 	case MB:
-		lbl, err := c.readLabel(d)
+		lbl, _, err := c.readLabel(d)
 		if err != nil {
 			return nil, err
 		}
 		return &RDataLabel{lbl, t}, nil
 	case MG:
-		lbl, err := c.readLabel(d)
+		lbl, _, err := c.readLabel(d)
 		if err != nil {
 			return nil, err
 		}
 		return &RDataLabel{lbl, t}, nil
 	case MR:
-		lbl, err := c.readLabel(d)
+		lbl, _, err := c.readLabel(d)
 		if err != nil {
 			return nil, err
 		}
@@ -66,7 +71,7 @@ func (c *context) parseRData(t Type, d []byte) (RData, error) {
 		return &RDataRaw{d, t}, nil
 	case WKS:
 	case PTR:
-		lbl, err := c.readLabel(d)
+		lbl, _, err := c.readLabel(d)
 		if err != nil {
 			return nil, err
 		}

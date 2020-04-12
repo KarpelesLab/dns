@@ -86,33 +86,46 @@ func (c *context) appendLabel(lbl string) error {
 	}
 }
 
-func (c *context) readLabel(buf []byte) (string, error) {
+func (c *context) readLabel(buf []byte) (string, int, error) {
 	var res []byte
+	var read int
+	readMode := true
 
 	for {
 		v := int(buf[0])
+		if readMode {
+			read += 1
+		}
 		if v == 0 {
-			return string(res), nil
+			return string(res), read, nil
 		}
 		if v&0xc0 == 0xc0 {
 			if len(buf) < 2 {
-				return string(res), ErrInvalidLabel
+				return string(res), read, ErrInvalidLabel
+			}
+			if readMode {
+				read += 1
+				readMode = false
 			}
 			// this is a label pointer
 			pos := int(binary.BigEndian.Uint16(buf[:2]) & ^uint16(0xc000))
 			if pos >= len(c.rawMsg) {
-				return string(res), ErrInvalidLabel
+				return string(res), read, ErrInvalidLabel
 			}
 			buf = c.rawMsg[pos:]
 			continue
 		}
 		if v > 63 {
-			return string(res), ErrInvalidLabel
+			return string(res), read, ErrInvalidLabel
 		}
 
 		buf = buf[1:] // move buffer forward to skip len byte
 		if v >= len(buf) {
-			return string(res), ErrInvalidLabel
+			return string(res), read, ErrInvalidLabel
+		}
+
+		if readMode {
+			read += v
 		}
 
 		res = append(res, buf[:v]...)
