@@ -1,5 +1,7 @@
 package dnsmsg
 
+import "encoding/binary"
+
 type RData interface {
 	// TODO
 	String() string
@@ -79,8 +81,22 @@ func (c *context) parseRData(t Type, d []byte) (RData, error) {
 	case HINFO:
 	case MINFO:
 	case MX:
+		if len(d) < 3 {
+			return nil, ErrInvalidLen
+		}
+		lbl, _, err := c.readLabel(d[2:])
+		if err != nil {
+			return nil, err
+		}
+		return &RDataMX{binary.BigEndian.Uint16(d[:2]), lbl}, nil
 	case TXT:
 		return RDataTXT(d), nil
+	// RFC 3596
+	case AAAA:
+		if len(d) != 16 {
+			return nil, ErrInvalidLen
+		}
+		return &RDataIP{d, t}, nil
 	}
 	return nil, ErrNotSupport
 }

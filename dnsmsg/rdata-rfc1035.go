@@ -20,6 +20,28 @@ func (txt RDataTXT) encode(c *context) error {
 	return err
 }
 
+type RDataMX struct {
+	Pref   uint16
+	Server string
+}
+
+func (mx *RDataMX) GetType() Type {
+	return MX
+}
+
+func (mx *RDataMX) String() string {
+	return fmt.Sprintf("%d %s", mx.Pref, mx.Server)
+}
+
+func (mx *RDataMX) encode(c *context) error {
+	err := binary.Write(c, binary.BigEndian, mx.Pref)
+	if err != nil {
+		return err
+	}
+
+	return c.appendLabel(mx.Server)
+}
+
 type RDataSOA struct {
 	MName   string
 	RName   string
