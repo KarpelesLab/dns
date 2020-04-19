@@ -11,6 +11,20 @@ type Question struct {
 	Class Class
 }
 
+func NewQuery(name string, class Class, typ Type) *Message {
+	msg := New()
+	msg.Bits |= hRecD // recursion desired
+	msg.Question = []*Question{
+		{
+			Name:  name,
+			Class: class,
+			Type:  typ,
+		},
+	}
+
+	return msg
+}
+
 func (c *context) parseQuestion() (*Question, error) {
 	lbl, err := c.parseLabel()
 	if err != nil {
