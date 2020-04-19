@@ -2,6 +2,7 @@ package dnsmsg
 
 import (
 	"encoding/binary"
+	"math/rand"
 	"strconv"
 	"strings"
 )
@@ -20,6 +21,14 @@ type Message struct {
 	Opts       []DnsOpt // EDNS Options
 	ReqUDPSize uint16   // requestor's UDP payload size
 	OptRCode   OptRCode // extended RCODE and flags
+}
+
+func New() *Message {
+	msg := &Message{
+		ID: uint16(rand.Int31n(0xffff) + 1),
+	}
+
+	return msg
 }
 
 func (m *Message) MarshalBinary() ([]byte, error) {
