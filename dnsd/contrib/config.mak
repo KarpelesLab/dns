@@ -1,0 +1,2 @@
+PROJECT_NAME=dnsd
+DIST_ARCHS=linux_amd64 windows_386 windows_amd64 darwin_amd64
