@@ -7,5 +7,6 @@ var (
 	ErrNotSupport   = errors.New("not supported")
 	ErrNameTooLong  = errors.New("name is too long")
 	ErrLabelTooLong = errors.New("label is too long")
+	ErrLabelInvalid = errors.New("label is invalid")
 	ErrInvalidLabel = errors.New("invalid label")
 )

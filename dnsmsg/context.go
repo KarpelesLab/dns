@@ -59,6 +59,11 @@ func (c *context) appendLabel(lbl string) error {
 		return ErrNameTooLong
 	}
 
+	if !strings.HasSuffix(lbl, ".") {
+		return ErrLabelInvalid
+	}
+	lbl = lbl[:len(lbl)-1]
+
 	// append label to msg, compress if possible
 	for {
 		if p, ok := c.labelMap[strings.ToLower(lbl)]; ok {
@@ -73,8 +78,15 @@ func (c *context) appendLabel(lbl string) error {
 		}
 
 		pos := strings.IndexByte(lbl, '.')
+		if pos == 0 {
+			// got ".." in label?
+			return ErrLabelInvalid
+		}
 		if pos == -1 {
 			// we reached end of label
+			if len(lbl) == 0 {
+				return ErrLabelInvalid
+			}
 			if len(lbl) > 63 {
 				return ErrLabelTooLong
 			}
