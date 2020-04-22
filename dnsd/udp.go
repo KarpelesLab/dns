@@ -43,11 +43,11 @@ func udpThread(l net.PacketConn) {
 			return
 		}
 
-		handleUdpPacket(buf[:n], addr)
+		handleUdpPacket(buf[:n], l, addr)
 	}
 }
 
-func handleUdpPacket(buf []byte, addr net.Addr) {
+func handleUdpPacket(buf []byte, l net.PacketConn, addr net.Addr) {
 	// parse pkg
 	msg, err := dnsmsg.Parse(buf)
 	if err != nil {
@@ -55,5 +55,21 @@ func handleUdpPacket(buf []byte, addr net.Addr) {
 		return
 	}
 
-	log.Printf("[udp] msg: %s", msg)
+	res, err := handleQuery(msg, addr)
+	if err != nil {
+		log.Printf("[udp] failed to respond to %s: %s", addr, err)
+		return
+	}
+	if res == nil {
+		// no response needed
+		return
+	}
+
+	buf, err = res.MarshalBinary()
+	if err != nil {
+		log.Printf("[udp] failed to make response to %s: %s", addr, err)
+		return
+	}
+
+	l.WriteTo(buf, addr)
 }
