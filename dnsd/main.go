@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/TrisTech/goupd"
 )
 
 var (
@@ -30,6 +32,7 @@ func setupSignals() {
 func main() {
 	setupSignals()
 	log.Printf("[main] Initializing dnsd...")
+	goupd.AutoUpdate(false)
 
 	errch := make(chan error)
 
