@@ -6,22 +6,22 @@ type HeaderBits uint16
 
 const (
 	// private consts to make code easier to read
-	hQuery HeaderBits = 0x8000
+	hQResp HeaderBits = 0x8000
 	hAuth  HeaderBits = 0x0400
 	hTrunc HeaderBits = 0x0200
 	hRecD  HeaderBits = 0x0100
 	hRecA  HeaderBits = 0x0080
 )
 
-func (h HeaderBits) IsQuery() bool {
-	return h&hQuery == hQuery
+func (h HeaderBits) IsResponse() bool {
+	return h&hQResp == hQResp
 }
 
-func (h *HeaderBits) SetQuery(q bool) {
+func (h *HeaderBits) SetResponse(q bool) {
 	if q {
-		*h |= hQuery
+		*h |= hQResp
 	} else {
-		*h &= ^hQuery
+		*h &= ^hQResp
 	}
 }
 
@@ -96,7 +96,7 @@ func (h HeaderBits) String() string {
 		h.OpCode().String(),
 	}
 
-	if h.IsQuery() {
+	if h.IsResponse() {
 		res = append(res, "qr")
 	}
 	if h.IsAuth() {
