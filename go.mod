@@ -1,4 +1,4 @@
-module github.com/KarpelesLab/dns/dnsd
+module github.com/KarpelesLab/dns
 
 go 1.14
 

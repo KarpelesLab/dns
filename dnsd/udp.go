@@ -6,6 +6,8 @@ import (
 	"log"
 	"net"
 	"runtime"
+
+	"github.com/KarpelesLab/dns/dnsmsg"
 )
 
 func initUdp(errch chan<- error) {
@@ -46,5 +48,12 @@ func udpThread(l net.PacketConn) {
 }
 
 func handleUdpPacket(buf []byte, addr net.Addr) {
-	// TODO
+	// parse pkg
+	msg, err := dnsmsg.Parse(buf)
+	if err != nil {
+		log.Printf("[udp] failed to parse msg from %s: %s", addr, err)
+		return
+	}
+
+	log.Printf("[udp] msg: %s", msg)
 }
