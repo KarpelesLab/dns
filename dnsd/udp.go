@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -8,13 +9,12 @@ import (
 )
 
 func initUdp(errch chan<- error) {
-	laddr := &net.UDPAddr{Port: 53}
+	cfg := &net.ListenConfig{Control: udpControl}
 
-	l, err := net.ListenUDP("udp", laddr)
+	l, err := cfg.ListenPacket(context.Background(), "udp", ":53")
 	if err != nil {
 		// retry on port 8053 (probably not root)
-		laddr.Port = 8053
-		l, err = net.ListenUDP("udp", laddr)
+		l, err = cfg.ListenPacket(context.Background(), "udp", ":8053")
 		if err != nil {
 			errch <- fmt.Errorf("failed to listen UDP: %w", err)
 			return
@@ -30,11 +30,11 @@ func initUdp(errch chan<- error) {
 	log.Printf("[udp] listening on port %s with %d threads", l.LocalAddr().String(), cnt)
 }
 
-func udpThread(l *net.UDPConn) {
+func udpThread(l net.PacketConn) {
 	buf := make([]byte, 1500)
 
 	for {
-		n, addr, err := l.ReadFromUDP(buf)
+		n, addr, err := l.ReadFrom(buf)
 
 		if err != nil {
 			log.Printf("[udp] failed to read: %s", err)
@@ -45,6 +45,6 @@ func udpThread(l *net.UDPConn) {
 	}
 }
 
-func handleUdpPacket(buf []byte, addr *net.UDPAddr) {
+func handleUdpPacket(buf []byte, addr net.Addr) {
 	// TODO
 }
