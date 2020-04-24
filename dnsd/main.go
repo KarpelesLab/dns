@@ -34,14 +34,22 @@ func main() {
 	log.Printf("[main] Initializing dnsd...")
 	goupd.AutoUpdate(false)
 
+	// we perform db init first because we need it
+	err := initDb()
+	if err != nil {
+		log.Printf("[main] database init failed: %s", err)
+		os.Exit(1)
+	}
+
 	errch := make(chan error)
 
 	go initUdp(errch)
+	go initTcp(errch)
 
 	select {
 	case err := <-errch:
 		log.Printf("[main] init failed: %s", err)
-		return
+		os.Exit(1)
 	case <-shutdownChannel:
 	}
 

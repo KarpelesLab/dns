@@ -29,7 +29,7 @@ func initUdp(errch chan<- error) {
 	for i := 0; i < cnt; i++ {
 		go udpThread(l)
 	}
-	log.Printf("[udp] listening on port %s with %d threads", l.LocalAddr().String(), cnt)
+	log.Printf("[udp] listening on port %s with %d goroutines", l.LocalAddr().String(), cnt)
 }
 
 func udpThread(l net.PacketConn) {
