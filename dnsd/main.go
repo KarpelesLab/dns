@@ -42,6 +42,8 @@ func main() {
 		os.Exit(1)
 	}
 
+	log.Printf("[main] API access key for this instance is: %s", getApiKey())
+
 	ips := getIps()
 
 	errch := make(chan error)

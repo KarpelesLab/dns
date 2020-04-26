@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"net"
@@ -9,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/KarpelesLab/dns/dnsmsg"
+	"github.com/KarpelesLab/rndstr"
 	"github.com/boltdb/bolt"
 	"github.com/google/uuid"
 )
@@ -103,4 +105,25 @@ func handleApi(rw http.ResponseWriter, req *http.Request) {
 	default:
 		http.NotFound(rw, req)
 	}
+}
+
+func getApiKey() string {
+	v, err := simpleGet([]byte("local"), []byte("apikey"))
+	if err == nil {
+		return string(bdup(v))
+	}
+
+	// generate random key
+	apikey, err := rndstr.SimpleReader(16, rndstr.Alnum, rand.Reader)
+	if err != nil {
+		panic(err)
+	}
+
+	// store key
+	err = simpleSet([]byte("local"), []byte("apikey"), []byte(apikey))
+	if err != nil {
+		panic(err)
+	}
+
+	return apikey
 }
