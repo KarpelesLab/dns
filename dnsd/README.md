@@ -10,8 +10,12 @@ Test:
 
 ## record
 
-Dns zones are stored into "zone" bucket. The key is a 16 bytes zone prefix (binary), followed by the name in reverse order, followed by a zero byte and the type of record (2 bytes).
+Dns zones are stored into "zone" bucket.
+
+* Key: 16 bytes zone prefix (binary), followed by the name in reverse order, followed by a zero byte and the type of record (2 bytes)
+* Value: timestamp (12 bytes) + serialized list of RData
 
 ## domain
 
-Key is IP address on which packet has been received (16 bytes) + domain, or just domain (if first is not set, as a catch all). Value is zone id (16 bytes) + timestamp (12 bytes)
+* Key: optional IP address on which packet has been received (16 bytes) + domain
+* Value: timestamp (12 bytes) + value
