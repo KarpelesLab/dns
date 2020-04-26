@@ -13,7 +13,7 @@ func (txt RDataTXT) GetType() Type {
 }
 
 func (txt RDataTXT) String() string {
-	return strconv.Quote(string(txt))
+	return strconv.QuoteToASCII(string(txt))
 }
 
 func (txt RDataTXT) encode(c *context) error {
