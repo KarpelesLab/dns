@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"os"
 
@@ -22,8 +23,25 @@ func createZone() (dnsZone, error) {
 }
 
 func (z dnsZone) handleQuery(pkt *dnsmsg.Message, q *dnsmsg.Question, sub []byte) error {
+	if len(sub) > 0 {
+		// check for cname
+		rec, err := z.getRecord(sub, dnsmsg.CNAME)
+		if err == nil && len(rec) > 0 {
+			pkt.Answer = append(pkt.Answer, rec...)
+			return nil
+		}
+	}
+
 	rec, err := z.getRecord(sub, q.Type)
+	if len(rec) == 0 {
+		err = os.ErrNotExist
+	}
 	if err != nil {
+		// attempt to find authority
+		auth, err := z.getRecord(nil, dnsmsg.SOA)
+		if err == nil {
+			pkt.Authority = append(pkt.Authority, auth...)
+		}
 		return err
 	}
 
@@ -34,42 +52,77 @@ func (z dnsZone) handleQuery(pkt *dnsmsg.Message, q *dnsmsg.Question, sub []byte
 
 func (z dnsZone) getRecord(name []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, error) {
 	var res []*dnsmsg.Resource
+	var err error
 
 	key := append(z[:], name...)
 
-	if typ != dnsmsg.ANY {
-		key = append(key, byte(typ>>8), byte(typ))
+	if typ == dnsmsg.ANY {
+		key = append(key, 0)
+
+		err = db.View(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte("record"))
+			if b == nil {
+				return os.ErrNotExist
+			}
+
+			c := b.Cursor()
+			k, v := c.Seek(key)
+
+			for bytes.HasPrefix(k, key) {
+				// decode
+				ttl, tmp, err := dnsmsg.UnmarshalRData(v)
+				if err != nil {
+					return err
+				}
+
+				for _, r := range tmp {
+					res = append(res, &dnsmsg.Resource{
+						Name:  string(name),
+						Class: dnsmsg.IN,
+						Type:  r.GetType(),
+						TTL:   ttl,
+						Data:  r,
+					})
+				}
+
+				k, v = c.Next()
+			}
+
+			return nil
+		})
+	} else {
+		key = append(key, 0, byte(typ>>8), byte(typ))
+
+		err = db.View(func(tx *bolt.Tx) error {
+			b := tx.Bucket([]byte("record"))
+			if b == nil {
+				return os.ErrNotExist
+			}
+
+			v := b.Get(key)
+			if v == nil {
+				return os.ErrNotExist
+			}
+
+			// decode
+			ttl, tmp, err := dnsmsg.UnmarshalRData(v)
+			if err != nil {
+				return err
+			}
+
+			for _, r := range tmp {
+				res = append(res, &dnsmsg.Resource{
+					Name:  string(name),
+					Class: dnsmsg.IN,
+					Type:  r.GetType(),
+					TTL:   ttl,
+					Data:  r,
+				})
+			}
+
+			return nil
+		})
 	}
-
-	err := db.View(func(tx *bolt.Tx) error {
-		b := tx.Bucket([]byte("record"))
-		if b == nil {
-			return os.ErrNotExist
-		}
-
-		v := b.Get(key)
-		if v == nil {
-			return os.ErrNotExist
-		}
-
-		// decode
-		ttl, tmp, err := dnsmsg.UnmarshalRData(v)
-		if err != nil {
-			return err
-		}
-
-		for _, r := range tmp {
-			res = append(res, &dnsmsg.Resource{
-				Name:  string(name),
-				Class: dnsmsg.IN,
-				Type:  r.GetType(),
-				TTL:   ttl,
-				Data:  r,
-			})
-		}
-
-		return nil
-	})
 
 	return res, err
 }
@@ -81,7 +134,7 @@ func (z dnsZone) setRecord(name string, ttl uint32, val []dnsmsg.RData) error {
 		return errors.New("invalid record set")
 	}
 	typ := val[0].GetType()
-	key = append(key, byte(typ>>8), byte(typ))
+	key = append(key, 0, byte(typ>>8), byte(typ))
 
 	// encode val
 	buf, err := dnsmsg.MarshalRData(ttl, val)

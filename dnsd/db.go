@@ -92,7 +92,7 @@ func createDomain(dns string, zone dnsZone, ip net.IP) error {
 		}
 
 		// set
-		return b.Put(key, zone[:])
+		return b.Put(key, append(zone[:], now()...))
 	})
 }
 

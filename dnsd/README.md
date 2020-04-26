@@ -10,7 +10,7 @@ Test:
 
 ## record
 
-Dns zones are stored into "zone" bucket. The key is a 16 bytes zone prefix (binary), followed by the name in reverse order, followed by the type of record.
+Dns zones are stored into "zone" bucket. The key is a 16 bytes zone prefix (binary), followed by the name in reverse order, followed by a zero byte and the type of record (2 bytes).
 
 ## domain
 
