@@ -71,7 +71,7 @@ func (c *context) appendLabel(lbl string) error {
 	if !strings.HasSuffix(lbl, ".") {
 		if c.name == "" {
 			log.Printf("missing default name")
-			return ErrInvalidLabel
+			return ErrLabelInvalid
 		}
 		if lbl == "" || lbl == "@" {
 			lbl = c.name
@@ -102,13 +102,13 @@ func (c *context) appendLabel(lbl string) error {
 		if pos == 0 {
 			// got ".." in label?
 			log.Printf("bad name = %s", lbl)
-			return ErrInvalidLabel
+			return ErrLabelInvalid
 		}
 		if pos == -1 {
 			// we reached end of label
 			if len(lbl) == 0 {
 				log.Printf("bad name end = %s", lbl)
-				return ErrInvalidLabel
+				return ErrLabelInvalid
 			}
 			if len(lbl) > 63 {
 				return ErrLabelTooLong
@@ -172,7 +172,7 @@ func (c *context) readLabel(buf []byte) (string, int, error) {
 		}
 		if v&0xc0 == 0xc0 {
 			if len(buf) < 2 {
-				return string(res), read, ErrInvalidLabel
+				return string(res), read, ErrLabelInvalid
 			}
 			if readMode {
 				read += 1
@@ -181,18 +181,18 @@ func (c *context) readLabel(buf []byte) (string, int, error) {
 			// this is a label pointer
 			pos := int(binary.BigEndian.Uint16(buf[:2]) & ^uint16(0xc000))
 			if pos >= len(c.rawMsg) {
-				return string(res), read, ErrInvalidLabel
+				return string(res), read, ErrLabelInvalid
 			}
 			buf = c.rawMsg[pos:]
 			continue
 		}
 		if v > 63 {
-			return string(res), read, ErrInvalidLabel
+			return string(res), read, ErrLabelInvalid
 		}
 
 		buf = buf[1:] // move buffer forward to skip len byte
 		if v >= len(buf) {
-			return string(res), read, ErrInvalidLabel
+			return string(res), read, ErrLabelInvalid
 		}
 
 		if readMode {

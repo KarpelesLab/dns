@@ -3,6 +3,7 @@ package dnsmsg
 import (
 	"encoding/binary"
 	"fmt"
+	"strconv"
 )
 
 type RDataTXT string
@@ -12,7 +13,7 @@ func (txt RDataTXT) GetType() Type {
 }
 
 func (txt RDataTXT) String() string {
-	return string(txt)
+	return strconv.Quote(string(txt))
 }
 
 func (txt RDataTXT) encode(c *context) error {
