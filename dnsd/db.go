@@ -92,7 +92,7 @@ func createDomain(dns string, zone dnsZone, ip net.IP) error {
 		}
 
 		// set
-		return b.Put(key, append(zone[:], now()...))
+		return b.Put(key, append(now(), zone[:]...))
 	})
 }
 
@@ -136,7 +136,7 @@ func getZone(dns string, laddr net.Addr) (dnsZone, []byte, []byte, error) {
 			if len(k) > 0 && bytes.HasPrefix(target, k) {
 				log.Printf("found, tgt=%s k=%s", target, k)
 				// match
-				copy(res[:], v)
+				copy(res[:], v[12:])
 				l = len(k) - 16
 				return nil
 			}
@@ -148,7 +148,7 @@ func getZone(dns string, laddr net.Addr) (dnsZone, []byte, []byte, error) {
 		}
 		if len(k) > 0 && bytes.HasPrefix(name, k) {
 			// match
-			copy(res[:], v)
+			copy(res[:], v[12:])
 			l = len(k)
 			return nil
 		}

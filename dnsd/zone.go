@@ -70,7 +70,7 @@ func (z dnsZone) getRecord(name []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, er
 
 			for bytes.HasPrefix(k, key) {
 				// decode
-				ttl, tmp, err := dnsmsg.UnmarshalRData(v)
+				ttl, tmp, err := dnsmsg.UnmarshalRData(v[12:])
 				if err != nil {
 					return err
 				}
@@ -105,7 +105,7 @@ func (z dnsZone) getRecord(name []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, er
 			}
 
 			// decode
-			ttl, tmp, err := dnsmsg.UnmarshalRData(v)
+			ttl, tmp, err := dnsmsg.UnmarshalRData(v[12:])
 			if err != nil {
 				return err
 			}
@@ -148,6 +148,6 @@ func (z dnsZone) setRecord(name string, ttl uint32, val []dnsmsg.RData) error {
 			return err
 		}
 
-		return b.Put(key, buf)
+		return b.Put(key, append(now(), buf...))
 	})
 }
