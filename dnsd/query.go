@@ -8,7 +8,7 @@ import (
 	"github.com/KarpelesLab/dns/dnsmsg"
 )
 
-func handleQuery(pkt *dnsmsg.Message, addr net.Addr) (*dnsmsg.Message, error) {
+func handleQuery(pkt *dnsmsg.Message, laddr, raddr net.Addr) (*dnsmsg.Message, error) {
 	log.Printf("handle query: %s", pkt)
 
 	if pkt.Bits.IsResponse() || pkt.Bits.OpCode() != dnsmsg.Query || len(pkt.Question) != 1 {

@@ -34,6 +34,7 @@ func initUdp(errch chan<- error) {
 
 func udpThread(l net.PacketConn) {
 	buf := make([]byte, 1500)
+	laddr := l.LocalAddr()
 
 	for {
 		n, addr, err := l.ReadFrom(buf)
@@ -43,21 +44,21 @@ func udpThread(l net.PacketConn) {
 			return
 		}
 
-		handleUdpPacket(buf[:n], l, addr)
+		handleUdpPacket(buf[:n], l, laddr, addr)
 	}
 }
 
-func handleUdpPacket(buf []byte, l net.PacketConn, addr net.Addr) {
+func handleUdpPacket(buf []byte, l net.PacketConn, laddr, raddr net.Addr) {
 	// parse pkg
 	msg, err := dnsmsg.Parse(buf)
 	if err != nil {
-		log.Printf("[udp] failed to parse msg from %s: %s", addr, err)
+		log.Printf("[udp] failed to parse msg from %s: %s", raddr, err)
 		return
 	}
 
-	res, err := handleQuery(msg, addr)
+	res, err := handleQuery(msg, laddr, raddr)
 	if err != nil {
-		log.Printf("[udp] failed to respond to %s: %s", addr, err)
+		log.Printf("[udp] failed to respond to %s: %s", raddr, err)
 		return
 	}
 	if res == nil {
@@ -67,9 +68,9 @@ func handleUdpPacket(buf []byte, l net.PacketConn, addr net.Addr) {
 
 	buf, err = res.MarshalBinary()
 	if err != nil {
-		log.Printf("[udp] failed to make response to %s: %s", addr, err)
+		log.Printf("[udp] failed to make response to %s: %s", raddr, err)
 		return
 	}
 
-	l.WriteTo(buf, addr)
+	l.WriteTo(buf, raddr)
 }

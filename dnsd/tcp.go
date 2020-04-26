@@ -79,7 +79,7 @@ func handleTcpPacket(buf []byte, c *net.TCPConn) {
 		return
 	}
 
-	res, err := handleQuery(msg, c.RemoteAddr())
+	res, err := handleQuery(msg, c.LocalAddr(), c.RemoteAddr())
 	if err != nil {
 		log.Printf("[tcp] failed to respond to %s: %s", c.RemoteAddr(), err)
 		return

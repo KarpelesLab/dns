@@ -14,4 +14,4 @@ Dns zones are stored into "zone" bucket. The key is a 16 bytes zone prefix (bina
 
 ## domain
 
-Key is IP address on which packet has been received (16 bytes) + domain. Value is zone id (16 bytes) + timestamp (12 bytes)
+Key is IP address on which packet has been received (16 bytes) + domain, or just domain (if first is not set, as a catch all). Value is zone id (16 bytes) + timestamp (12 bytes)
