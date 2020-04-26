@@ -12,6 +12,8 @@ type context struct {
 	rawMsg   []byte
 	labelMap map[string]uint16 // cache for label compression
 	rpos     int               // read position
+	name     string            // default suffix
+	marshal  bool              // marshal mode
 }
 
 func (c *context) Write(p []byte) (int, error) {
@@ -58,11 +60,24 @@ func (c *context) appendLabel(lbl string) error {
 	if len(lbl) > 255 {
 		return ErrNameTooLong
 	}
+	if c.marshal {
+		// do not care further
+		c.rawMsg = append(c.rawMsg, byte(len(lbl)))
+		c.rawMsg = append(c.rawMsg, lbl...)
+		return nil
+	}
 
 	if !strings.HasSuffix(lbl, ".") {
-		return ErrLabelInvalid
+		if c.name == "" {
+			return ErrLabelInvalid
+		}
+		lbl = lbl + "." + c.name
+		if len(lbl) > 255 {
+			return ErrNameTooLong
+		}
+	} else {
+		lbl = lbl[:len(lbl)-1]
 	}
-	lbl = lbl[:len(lbl)-1]
 
 	// append label to msg, compress if possible
 	for {
@@ -125,6 +140,19 @@ func (c *context) readLabel(buf []byte) (string, int, error) {
 	var res []byte
 	var read int
 	readMode := true
+
+	if c.marshal {
+		// simple read
+		l := int(buf[0])
+		if l == 0 {
+			return "", 1, nil
+		}
+		if len(buf) < l+1 {
+			return "", 0, io.ErrUnexpectedEOF
+		}
+		s := buf[1 : l+1]
+		return string(s), l + 1, nil
+	}
 
 	for {
 		v := int(buf[0])
