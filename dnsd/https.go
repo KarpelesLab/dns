@@ -10,6 +10,7 @@ import (
 	"net"
 	"net/http"
 	"runtime"
+	"strings"
 
 	"github.com/KarpelesLab/dns/dnsmsg"
 )
@@ -106,6 +107,10 @@ func handleHttpsReq(rw http.ResponseWriter, req *http.Request) {
 			return
 		}
 	default:
+		if strings.HasPrefix(req.URL.Path, "/api/") {
+			handleApi(rw, req)
+			return
+		}
 		http.NotFound(rw, req)
 		return
 	}

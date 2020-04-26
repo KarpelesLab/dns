@@ -117,6 +117,27 @@ func getZone(dns string, laddr net.Addr) (dnsZone, []byte, []byte, error) {
 	var l int
 
 	err := db.View(func(tx *bolt.Tx) error {
+		if ip != nil {
+			b := tx.Bucket([]byte("ip-domain"))
+			if b != nil {
+				c := b.Cursor()
+
+				target := append([]byte(ip), name...)
+
+				// perform two lookups
+				k, v := c.Seek(target)
+				if !bytes.Equal(target, k) {
+					k, v = c.Prev()
+				}
+				if len(k) > 0 && bytes.HasPrefix(target, k) {
+					// match
+					copy(res[:], v[12:])
+					l = len(k) - 16
+					return nil
+				}
+			}
+		}
+
 		b := tx.Bucket([]byte("domain"))
 		if b == nil {
 			// no bucket, no need to look further
@@ -124,23 +145,6 @@ func getZone(dns string, laddr net.Addr) (dnsZone, []byte, []byte, error) {
 		}
 
 		c := b.Cursor()
-
-		if ip != nil {
-			target := append([]byte(ip), name...)
-
-			// perform two lookups
-			k, v := c.Seek(target)
-			if !bytes.Equal(target, k) {
-				k, v = c.Prev()
-			}
-			if len(k) > 0 && bytes.HasPrefix(target, k) {
-				log.Printf("found, tgt=%s k=%s", target, k)
-				// match
-				copy(res[:], v[12:])
-				l = len(k) - 16
-				return nil
-			}
-		}
 
 		k, v := c.Seek(name)
 		if !bytes.Equal(name, k) {
