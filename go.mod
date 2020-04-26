@@ -3,6 +3,7 @@ module github.com/KarpelesLab/dns
 go 1.14
 
 require (
+	github.com/KarpelesLab/rndstr v0.0.1
 	github.com/TrisTech/goupd v0.1.2
 	github.com/boltdb/bolt v1.3.1
 	github.com/google/uuid v1.1.1

@@ -1,3 +1,5 @@
+github.com/KarpelesLab/rndstr v0.0.1 h1:W7ajgLP+2E16p0VQOgDraFwPUJehQMQpQBF/AS8PAJA=
+github.com/KarpelesLab/rndstr v0.0.1/go.mod h1:Qyv1zfLX7UQx+7PhTm6+0ucZDKqmGZ0igtL/QymVp9U=
 github.com/TrisTech/goupd v0.1.2 h1:CUCyWwz1MbhBfFFBEsqQKigYbCkSfnqNtC2E9exDR2Q=
 github.com/TrisTech/goupd v0.1.2/go.mod h1:kxYe3iGXY+FvPUlbayaoPSpcNxGRYI2pNnqar3X9A6k=
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=
