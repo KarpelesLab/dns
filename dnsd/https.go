@@ -4,6 +4,8 @@ import (
 	"crypto/tls"
 	"encoding/base64"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -84,9 +86,28 @@ func handleHttpsReq(rw http.ResponseWriter, req *http.Request) {
 				return
 			}
 			handleHttpsPacket(buf, rw, req)
+			return
+		case "POST":
+			// post content-type = application/dns-message
+			if req.Header.Get("Content-Type") != "application/dns-message" {
+				http.Error(rw, "bad content-type, should be application/dns-message", http.StatusBadRequest)
+				return
+			}
+			lr := &io.LimitedReader{req.Body, 512} // limit read to 512 bytes
+			buf, err := ioutil.ReadAll(lr)
+			if err != nil {
+				http.Error(rw, fmt.Sprintf("failed to read: %s", err), http.StatusBadRequest)
+				return
+			}
+			handleHttpsPacket(buf, rw, req)
+			return
+		default:
+			http.Error(rw, "unsupported method", http.StatusBadRequest)
+			return
 		}
 	default:
 		http.NotFound(rw, req)
+		return
 	}
 }
 
