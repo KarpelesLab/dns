@@ -11,11 +11,22 @@ import (
 	"github.com/KarpelesLab/dns/dnsmsg"
 )
 
-func initTcp(errch chan<- error) {
-	l, err := net.ListenTCP("tcp", &net.TCPAddr{Port: 53})
+func initTcp(ips []net.IP, errch chan<- error) {
+	if len(ips) == 0 {
+		tcpListen(nil, errch)
+		return
+	}
+
+	for _, ip := range ips {
+		tcpListen(ip, errch)
+	}
+}
+
+func tcpListen(ip net.IP, errch chan<- error) {
+	l, err := net.ListenTCP("tcp", &net.TCPAddr{IP: ip, Port: 53})
 	if err != nil {
 		// retry on port 8053 (probably not root)
-		l, err = net.ListenTCP("tcp", &net.TCPAddr{Port: 8053})
+		l, err = net.ListenTCP("tcp", &net.TCPAddr{IP: ip, Port: 8053})
 		if err != nil {
 			errch <- fmt.Errorf("failed to listen TCP: %w", err)
 			return

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"syscall"
@@ -41,10 +42,12 @@ func main() {
 		os.Exit(1)
 	}
 
+	ips := getIps()
+
 	errch := make(chan error)
 
-	go initUdp(errch)
-	go initTcp(errch)
+	go initUdp(ips, errch)
+	go initTcp(ips, errch)
 
 	select {
 	case err := <-errch:
@@ -54,4 +57,26 @@ func main() {
 	}
 
 	log.Printf("[main] Bye bye")
+}
+
+func getIps() []net.IP {
+	ips := []net.IP{}
+
+	if addrs, err := net.InterfaceAddrs(); err == nil {
+		for _, a := range addrs {
+			switch v := a.(type) {
+			case *net.IPNet: // default
+				ip := v.IP
+				if !ip.IsGlobalUnicast() {
+					log.Printf("[main] ignoring local ip %s", ip)
+					continue
+				}
+				ips = append(ips, ip)
+			default:
+				log.Printf("[main] failed to analyze machine ip: unhandled addr type %T", v)
+			}
+		}
+	}
+
+	return ips
 }

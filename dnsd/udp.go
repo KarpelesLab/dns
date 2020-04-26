@@ -10,13 +10,29 @@ import (
 	"github.com/KarpelesLab/dns/dnsmsg"
 )
 
-func initUdp(errch chan<- error) {
+func initUdp(ips []net.IP, errch chan<- error) {
+	if len(ips) == 0 {
+		listenUdp(nil, errch)
+	}
+	for _, ip := range ips {
+		listenUdp(ip, errch)
+	}
+}
+
+func listenUdp(ip net.IP, errch chan<- error) {
 	cfg := &net.ListenConfig{Control: udpControl}
 
-	l, err := cfg.ListenPacket(context.Background(), "udp", ":53")
+	var ipstr string
+	if ip4 := ip.To4(); ip4 != nil {
+		ipstr = ip4.String()
+	} else if ip != nil {
+		ipstr = ip.String()
+	}
+
+	l, err := cfg.ListenPacket(context.Background(), "udp", ipstr+":53")
 	if err != nil {
 		// retry on port 8053 (probably not root)
-		l, err = cfg.ListenPacket(context.Background(), "udp", ":8053")
+		l, err = cfg.ListenPacket(context.Background(), "udp", ipstr+":8053")
 		if err != nil {
 			errch <- fmt.Errorf("failed to listen UDP: %w", err)
 			return
