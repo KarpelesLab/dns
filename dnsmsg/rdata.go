@@ -2,7 +2,10 @@ package dnsmsg
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"net"
+	"strconv"
 )
 
 type RData interface {
@@ -10,6 +13,48 @@ type RData interface {
 	String() string
 	GetType() Type
 	encode(c *context) error
+}
+
+func RDataFromString(t Type, str string) (RData, error) {
+	switch t {
+	// RFC 1035
+	case A:
+		ip := net.ParseIP(str).To4()
+		if len(ip) != 4 {
+			return nil, errors.New("could not parse ip")
+		}
+		return &RDataIP{ip, t}, nil
+	case NS, MD, MF, CNAME:
+		return &RDataLabel{str, t}, nil
+	case SOA:
+		soa := &RDataSOA{}
+		_, err := fmt.Sscanf(str, "%s %s %d %d %d %d %d", &soa.MName, &soa.RName, &soa.Serial, &soa.Refresh, &soa.Retry, &soa.Expire, &soa.Minimum)
+		return soa, err
+	case MG, MB, MR:
+		return &RDataLabel{str, t}, nil
+	case NULL:
+		return &RDataRaw{nil, t}, nil
+	case WKS:
+	case PTR:
+		return &RDataLabel{str, t}, nil
+	case HINFO:
+	case MINFO:
+	case MX:
+		mx := &RDataMX{}
+		_, err := fmt.Sscanf(str, "%d %s", &mx.Pref, &mx.Server)
+		return mx, err
+	case TXT:
+		s, err := strconv.Unquote(str)
+		return RDataTXT(s), err
+	// RFC 3596
+	case AAAA:
+		ip := net.ParseIP(str).To16()
+		if len(ip) != 16 {
+			return nil, errors.New("could not parse ipv6")
+		}
+		return &RDataIP{ip, t}, nil
+	}
+	return nil, fmt.Errorf("while parsing %s string: %w", t.String(), ErrNotSupport)
 }
 
 func (c *context) parseRData(t Type, d []byte) (RData, error) {
