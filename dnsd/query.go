@@ -18,50 +18,22 @@ func handleQuery(pkt *dnsmsg.Message, laddr, raddr net.Addr) (*dnsmsg.Message, e
 	q := pkt.Question[0]
 	pkt.Bits.SetResponse(true)
 
-	// test
-	switch q.Name {
-	case "ns1.zedns.net.":
-		pkt.Bits.SetAuth(true)
-		if q.Class == dnsmsg.IN && q.Type == dnsmsg.A {
-			pkt.Answer = append(pkt.Answer, &dnsmsg.Resource{
-				Name:  "ns1.zedns.net.",
-				Class: dnsmsg.IN,
-				Type:  dnsmsg.A,
-				TTL:   86400,
-
-				Data: &dnsmsg.RDataIP{IP: net.IPv4(18, 181, 102, 53), Type: dnsmsg.A},
-			})
-		}
-		return pkt, nil
-	case "ns2.zedns.net.":
-		pkt.Bits.SetAuth(true)
-		if q.Class == dnsmsg.IN && q.Type == dnsmsg.A {
-			pkt.Answer = append(pkt.Answer, &dnsmsg.Resource{
-				Name:  "ns2.zedns.net.",
-				Class: dnsmsg.IN,
-				Type:  dnsmsg.A,
-				TTL:   86400,
-
-				Data: &dnsmsg.RDataIP{IP: net.IPv4(34, 237, 237, 237), Type: dnsmsg.A},
-			})
-		}
-		return pkt, nil
-	case "ns3.zedns.net.":
-		pkt.Bits.SetAuth(true)
-		if q.Class == dnsmsg.IN && q.Type == dnsmsg.A {
-			pkt.Answer = append(pkt.Answer, &dnsmsg.Resource{
-				Name:  "ns3.zedns.net.",
-				Class: dnsmsg.IN,
-				Type:  dnsmsg.A,
-				TTL:   86400,
-
-				Data: &dnsmsg.RDataIP{IP: net.IPv4(3, 11, 47, 103), Type: dnsmsg.A},
-			})
-		}
+	zone, name, sub, err := getZone(q.Name, laddr)
+	if err != nil {
+		// not found
+		pkt.Bits.SetRCode(dnsmsg.ErrName)
 		return pkt, nil
 	}
 
-	pkt.Bits.SetRCode(dnsmsg.ErrName)
+	// we have authority
+	pkt.Bits.SetAuth(true)
+	pkt.Base = string(reverseDnsName(name))
+	err = zone.handleQuery(pkt, q, sub)
+
+	if err != nil {
+		// not found, or something?
+		pkt.Bits.SetRCode(dnsmsg.ErrName)
+	}
 
 	return pkt, nil
 }

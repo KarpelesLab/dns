@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 
+	"github.com/KarpelesLab/dns/dnsmsg"
 	"github.com/boltdb/bolt"
 	"github.com/google/uuid"
 )
@@ -40,7 +41,7 @@ func makeDb() {
 	// * entry: ns1 A 18.181.102.53
 	// * entry: ns2 A 34.237.237.237
 	// * entry: ns3 A 3.11.47.103
-	z, _, err := getZone("zedns.net", nil)
+	z, _, _, err := getZone("zedns.net", nil)
 	if err == nil {
 		log.Printf("zone id = %s", z)
 		return
@@ -51,34 +52,31 @@ func makeDb() {
 		return
 	}
 
+	// create zone
 	z, err = createZone()
 	if err != nil {
 		log.Printf("[db] failed to create zone: %s", err)
 	}
 
-	// create zone
+	// add records
+	z.setRecord("", 60, []dnsmsg.RData{makeSOA()})
+	z.setRecord("ns1", 86400, []dnsmsg.RData{&dnsmsg.RDataIP{IP: net.IPv4(18, 181, 102, 53), Type: dnsmsg.A}})
+	z.setRecord("ns2", 86400, []dnsmsg.RData{&dnsmsg.RDataIP{IP: net.IPv4(34, 237, 237, 237), Type: dnsmsg.A}})
+	z.setRecord("ns3", 86400, []dnsmsg.RData{&dnsmsg.RDataIP{IP: net.IPv4(3, 11, 47, 103), Type: dnsmsg.A}})
+
+	// set domain
 	err = createDomain("zedns.net", z, nil)
-	log.Printf("err = %s", err)
-}
-
-type dnsZone uuid.UUID
-
-func (z dnsZone) String() string {
-	return uuid.UUID(z).String()
-}
-
-func createZone() (dnsZone, error) {
-	// there's actually nothing we need to do to create a zone
-	r, err := uuid.NewRandom() // NewUUID() ?
-	return dnsZone(r), err
+	if err != nil {
+		log.Printf("[db] failed to create domain: %s", err)
+	}
 }
 
 func createDomain(dns string, zone dnsZone, ip net.IP) error {
 	var key []byte
 	if ip == nil {
-		key = reverseDnsName(dns)
+		key = reverseDnsName([]byte(dns))
 	} else {
-		key = append([]byte(ip.To16()), reverseDnsName(dns)...)
+		key = append([]byte(ip.To16()), reverseDnsName([]byte(dns))...)
 	}
 
 	return db.Update(func(tx *bolt.Tx) error {
@@ -98,7 +96,7 @@ func createDomain(dns string, zone dnsZone, ip net.IP) error {
 	})
 }
 
-func getZone(dns string, laddr net.Addr) (dnsZone, []byte, error) {
+func getZone(dns string, laddr net.Addr) (dnsZone, []byte, []byte, error) {
 	var ip net.IP
 
 	switch v := laddr.(type) {
@@ -109,10 +107,10 @@ func getZone(dns string, laddr net.Addr) (dnsZone, []byte, error) {
 	case nil:
 		// do nothing
 	default:
-		return dnsZone(uuid.Nil), nil, errors.New("invalid address")
+		return dnsZone(uuid.Nil), nil, nil, errors.New("invalid address")
 	}
 
-	name := reverseDnsName(dns)
+	name := reverseDnsName([]byte(dns))
 
 	// find zone matching dns
 	var res dnsZone
@@ -132,7 +130,10 @@ func getZone(dns string, laddr net.Addr) (dnsZone, []byte, error) {
 
 			// perform two lookups
 			k, v := c.Seek(target)
-			if bytes.HasPrefix(target, k) {
+			if !bytes.Equal(target, k) {
+				k, v = c.Prev()
+			}
+			if len(k) > 0 && bytes.HasPrefix(target, k) {
 				log.Printf("found, tgt=%s k=%s", target, k)
 				// match
 				copy(res[:], v)
@@ -142,7 +143,10 @@ func getZone(dns string, laddr net.Addr) (dnsZone, []byte, error) {
 		}
 
 		k, v := c.Seek(name)
-		if bytes.HasPrefix(name, k) {
+		if !bytes.Equal(name, k) {
+			k, v = c.Prev()
+		}
+		if len(k) > 0 && bytes.HasPrefix(name, k) {
 			// match
 			copy(res[:], v)
 			l = len(k)
@@ -150,5 +154,13 @@ func getZone(dns string, laddr net.Addr) (dnsZone, []byte, error) {
 		}
 		return os.ErrNotExist
 	})
-	return res, name[l:], err
+
+	domain := name[:l]
+	name = name[l:]
+	if len(name) > 0 {
+		// should be "." since not end of name
+		name = name[1:]
+	}
+
+	return res, domain, name, err
 }

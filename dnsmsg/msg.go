@@ -21,6 +21,8 @@ type Message struct {
 	Opts       []DnsOpt // EDNS Options
 	ReqUDPSize uint16   // requestor's UDP payload size
 	OptRCode   OptRCode // extended RCODE and flags
+
+	Base string // base name (always empty for parsed queries)
 }
 
 func New() *Message {
@@ -34,6 +36,7 @@ func New() *Message {
 func (m *Message) MarshalBinary() ([]byte, error) {
 	c := &context{
 		labelMap: make(map[string]uint16),
+		name:     m.Base,
 	}
 
 	err := binary.Write(c, binary.BigEndian, m.ID)

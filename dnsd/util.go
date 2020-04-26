@@ -1,14 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"encoding/binary"
-	"strings"
 	"time"
+
+	"github.com/KarpelesLab/dns/dnsmsg"
 )
 
-func reverseDnsName(n string) []byte {
+func reverseDnsName(n []byte) []byte {
 	// reverse dns name, make lowercase, etc
-	n = strings.ToLower(n)
+	n = bytes.ToLower(n)
 
 	var res []byte
 
@@ -17,7 +19,7 @@ func reverseDnsName(n string) []byte {
 			res = append(res, '.')
 		}
 
-		p := strings.LastIndexByte(n, '.')
+		p := bytes.LastIndexByte(n, '.')
 		if p == -1 {
 			res = append(res, n...)
 			return res
@@ -47,4 +49,20 @@ func now() []byte {
 	binary.BigEndian.PutUint64(res[:8], uint64(now.Unix()))       // no way "now" can be negative
 	binary.BigEndian.PutUint32(res[8:], uint32(now.Nanosecond())) // max=3b9ac9ff
 	return res
+}
+
+func makeSOA() *dnsmsg.RDataSOA {
+	// tbqh serial is quite meaningless since we do not use AXFR. Let's just set it to today for now.
+	now := time.Now()
+	serial := now.Year()*10000 + int(now.Month())*100 + now.Day()
+
+	return &dnsmsg.RDataSOA{
+		MName:   "ns1", // ?
+		RName:   "admin",
+		Serial:  uint32(serial),
+		Refresh: 900,
+		Retry:   900,
+		Expire:  1800,
+		Minimum: 60,
+	}
 }
