@@ -3,6 +3,7 @@ package dnsmsg
 import (
 	"encoding/binary"
 	"io"
+	"log"
 	"strings"
 )
 
@@ -69,9 +70,14 @@ func (c *context) appendLabel(lbl string) error {
 
 	if !strings.HasSuffix(lbl, ".") {
 		if c.name == "" {
-			return ErrLabelInvalid
+			log.Printf("missing default name")
+			return ErrInvalidLabel
 		}
-		lbl = lbl + "." + c.name
+		if lbl == "" || lbl == "@" {
+			lbl = c.name
+		} else {
+			lbl = lbl + "." + c.name
+		}
 		if len(lbl) > 255 {
 			return ErrNameTooLong
 		}
@@ -95,12 +101,14 @@ func (c *context) appendLabel(lbl string) error {
 		pos := strings.IndexByte(lbl, '.')
 		if pos == 0 {
 			// got ".." in label?
-			return ErrLabelInvalid
+			log.Printf("bad name = %s", lbl)
+			return ErrInvalidLabel
 		}
 		if pos == -1 {
 			// we reached end of label
 			if len(lbl) == 0 {
-				return ErrLabelInvalid
+				log.Printf("bad name end = %s", lbl)
+				return ErrInvalidLabel
 			}
 			if len(lbl) > 63 {
 				return ErrLabelTooLong

@@ -66,6 +66,7 @@ func (soa *RDataSOA) decode(c *context, d []byte) error {
 	if err != nil {
 		return err
 	}
+	d = d[n:]
 
 	if len(d) < 20 {
 		return ErrInvalidLen
