@@ -164,3 +164,29 @@ func getZone(dns string, laddr net.Addr) (dnsZone, []byte, []byte, error) {
 
 	return res, domain, name, err
 }
+
+func simpleGet(bucket, key []byte) (r []byte, err error) {
+	err = db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket(bucket)
+		if b == nil {
+			return os.ErrNotExist
+		}
+		v := b.Get(key)
+		if v == nil {
+			return os.ErrNotExist
+		}
+		r = bdup(v)
+		return nil
+	})
+	return
+}
+
+func simpleSet(bucket, key, val []byte) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists(bucket)
+		if err != nil {
+			return err
+		}
+		return b.Put(key, val)
+	})
+}

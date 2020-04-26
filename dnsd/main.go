@@ -48,6 +48,7 @@ func main() {
 
 	go initUdp(ips, errch)
 	go initTcp(ips, errch)
+	go initHttps(ips, errch)
 
 	select {
 	case err := <-errch:
