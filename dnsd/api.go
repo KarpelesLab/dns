@@ -18,6 +18,27 @@ func handleApi(rw http.ResponseWriter, req *http.Request) {
 	p = strings.TrimPrefix(p, "/api/")
 
 	switch p {
+	case "connect":
+		// hijack connection
+		hj, ok := rw.(http.Hijacker)
+		if !ok {
+			http.Error(rw, "please use http/1.1", http.StatusBadRequest)
+			return
+		}
+
+		conn, b, err := hj.Hijack()
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		defer conn.Close()
+		defer b.Flush()
+
+		fmt.Fprintf(b, "HTTP/1.0 200 OK\r\n\r\n")
+
+		// TODO
+		fmt.Fprintf(b, "Hello test\n")
 	case "export-all":
 		// export all records
 		rw.Header().Set("Content-Type", "text/plain")
