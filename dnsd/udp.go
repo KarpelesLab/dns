@@ -26,7 +26,7 @@ func listenUdp(ip net.IP, errch chan<- error) {
 	if ip4 := ip.To4(); ip4 != nil {
 		ipstr = ip4.String()
 	} else if ip != nil {
-		ipstr = ip.String()
+		ipstr = "[" + ip.String() + "]"
 	}
 
 	l, err := cfg.ListenPacket(context.Background(), "udp", ipstr+":53")
