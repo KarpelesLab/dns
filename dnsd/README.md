@@ -13,7 +13,9 @@ Test:
 Dns zones are stored into "record" bucket.
 
 * Key: 16 bytes zone prefix (binary), followed by the name in reverse order, followed by a zero byte and the type of record (2 bytes)
-* Value: timestamp (12 bytes) + serialized list of RData
+* Value: timestamp (12 bytes) + Record object
+
+If type of record is 0xffff, we do not have a serialized list of RData, but a gob encoded value.
 
 ## domain
 

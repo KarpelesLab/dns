@@ -3,9 +3,8 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
+	"fmt"
 	"time"
-
-	"github.com/KarpelesLab/dns/dnsmsg"
 )
 
 func reverseDnsName(n []byte) []byte {
@@ -51,18 +50,10 @@ func now() []byte {
 	return res
 }
 
-func makeSOA() *dnsmsg.RDataSOA {
+func makeSOA() string {
 	// tbqh serial is quite meaningless since we do not use AXFR. Let's just set it to today for now.
 	now := time.Now()
 	serial := now.Year()*10000 + int(now.Month())*100 + now.Day()
 
-	return &dnsmsg.RDataSOA{
-		MName:   "ns1", // ?
-		RName:   "admin",
-		Serial:  uint32(serial),
-		Refresh: 900,
-		Retry:   900,
-		Expire:  1800,
-		Minimum: 60,
-	}
+	return fmt.Sprintf("%s %s %d %d %d %d %d", "ns1", "admin", serial, 900, 900, 1800, 60)
 }

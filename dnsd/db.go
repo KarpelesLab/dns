@@ -23,6 +23,7 @@ func initDb() error {
 	}
 
 	for _, f := range dbFile {
+		os.Remove(f) // XXX REMOVE ME UPON GOING LIVE SO WE DON'T ALWAYS MAKE A NEW DB
 		db, err = bolt.Open(f, 0600, nil)
 		if err == nil {
 			log.Printf("[db] opened database file %s", f)
@@ -36,12 +37,11 @@ func initDb() error {
 
 func makeDb() {
 	// XXX for testing only, create a basic zone+entries:
-	// * zone: zedns.net
+	// * zone: shellsnet.com
 	// * entry: SOA (automatic)
-	// * entry: ns1 A 18.181.102.53
-	// * entry: ns2 A 34.237.237.237
-	// * entry: ns3 A 3.11.47.103
-	z, _, _, err := getZone("zedns.net", nil)
+	// * entry: NS (ns0.shells.com ns1.shells.com)
+	// * HTTP
+	z, _, _, err := getZone("shellsnet.com", nil)
 	if err == nil {
 		log.Printf("zone id = %s", z)
 		return
@@ -59,13 +59,12 @@ func makeDb() {
 	}
 
 	// add records
-	z.setRecord("", 60, []dnsmsg.RData{makeSOA()})
-	z.setRecord("ns1", 86400, []dnsmsg.RData{&dnsmsg.RDataIP{IP: net.IPv4(18, 181, 102, 53), Type: dnsmsg.A}})
-	z.setRecord("ns2", 86400, []dnsmsg.RData{&dnsmsg.RDataIP{IP: net.IPv4(34, 237, 237, 237), Type: dnsmsg.A}})
-	z.setRecord("ns3", 86400, []dnsmsg.RData{&dnsmsg.RDataIP{IP: net.IPv4(3, 11, 47, 103), Type: dnsmsg.A}})
+	z.setRecord("", 60, dnsmsg.SOA, makeSOA())
+	z.setRecord("", 86400, dnsmsg.NS, "ns0.shells.com.", "ns1.shells.com.")
+	z.setRecord("", 86400, dnsmsg.TXT, "\"hello world\"")
 
 	// set domain
-	err = createDomain("zedns.net", z, nil)
+	err = createDomain("shellsnet.com", z, nil)
 	if err != nil {
 		log.Printf("[db] failed to create domain: %s", err)
 	}

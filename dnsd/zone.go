@@ -69,18 +69,22 @@ func (z dnsZone) getRecord(name []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, er
 			k, v := c.Seek(key)
 
 			for bytes.HasPrefix(k, key) {
-				// decode
-				ttl, tmp, err := dnsmsg.UnmarshalRData(v[12:])
+				// decodo
+				rec, err := ReadRecord(v[12:])
+				if err != nil {
+					return err
+				}
+				rdata, err := rec.RData()
 				if err != nil {
 					return err
 				}
 
-				for _, r := range tmp {
+				for _, r := range rdata {
 					res = append(res, &dnsmsg.Resource{
 						Name:  string(name),
 						Class: dnsmsg.IN,
 						Type:  r.GetType(),
-						TTL:   ttl,
+						TTL:   rec.TTL,
 						Data:  r,
 					})
 				}
@@ -105,17 +109,21 @@ func (z dnsZone) getRecord(name []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, er
 			}
 
 			// decode
-			ttl, tmp, err := dnsmsg.UnmarshalRData(v[12:])
+			rec, err := ReadRecord(v[12:])
+			if err != nil {
+				return err
+			}
+			rdata, err := rec.RData()
 			if err != nil {
 				return err
 			}
 
-			for _, r := range tmp {
+			for _, r := range rdata {
 				res = append(res, &dnsmsg.Resource{
 					Name:  string(name),
 					Class: dnsmsg.IN,
 					Type:  r.GetType(),
-					TTL:   ttl,
+					TTL:   rec.TTL,
 					Data:  r,
 				})
 			}
@@ -127,20 +135,22 @@ func (z dnsZone) getRecord(name []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, er
 	return res, err
 }
 
-func (z dnsZone) setRecord(name string, ttl uint32, val []dnsmsg.RData) error {
+func (z dnsZone) setRecord(name string, ttl uint32, typ dnsmsg.Type, value ...string) error {
 	key := reverseDnsName([]byte(name))
 	key = append(z[:], key...)
-	if len(val) == 0 {
+	if len(value) == 0 {
 		return errors.New("invalid record set")
 	}
-	typ := val[0].GetType()
 	key = append(key, 0, byte(typ>>8), byte(typ))
 
-	// encode val
-	buf, err := dnsmsg.MarshalRData(ttl, val)
-	if err != nil {
-		return err
+	rec := &Record{
+		Type:  typ,
+		TTL:   ttl,
+		Value: value,
 	}
+
+	// encode val
+	buf := rec.Bytes()
 
 	return db.Update(func(tx *bolt.Tx) error {
 		b, err := tx.CreateBucketIfNotExists([]byte("record"))
