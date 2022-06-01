@@ -1,3 +1,7 @@
+github.com/KarpelesLab/goupd v0.1.2 h1:u30VaEkOXItnNexTXOSBaVSlYqb/uCM3wsaz7LIaxlw=
+github.com/KarpelesLab/goupd v0.1.2/go.mod h1:SaSuf1mpzN8sRubeW3thTXwrN6TDskGSpdaRZibDJKk=
+github.com/KarpelesLab/goupd v0.2.8 h1:lc5hqd/jfkYeFouBR0qG1gGpCCdruoiOIrEDe6ihAks=
+github.com/KarpelesLab/goupd v0.2.8/go.mod h1:Yc3JOLMq0lVktd8VVA8tiJpREuJ72ajwmFMRvmf1diY=
 github.com/KarpelesLab/rndstr v0.0.1 h1:W7ajgLP+2E16p0VQOgDraFwPUJehQMQpQBF/AS8PAJA=
 github.com/KarpelesLab/rndstr v0.0.1/go.mod h1:Qyv1zfLX7UQx+7PhTm6+0ucZDKqmGZ0igtL/QymVp9U=
 github.com/TrisTech/goupd v0.1.2 h1:CUCyWwz1MbhBfFFBEsqQKigYbCkSfnqNtC2E9exDR2Q=
