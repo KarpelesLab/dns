@@ -32,6 +32,7 @@ func handleQuery(pkt *dnsmsg.Message, laddr, raddr net.Addr) (*dnsmsg.Message, e
 
 	if err != nil {
 		// not found, or something?
+		log.Printf("query failed: %s", err)
 		pkt.Bits.SetRCode(dnsmsg.ErrName)
 	}
 

@@ -8,7 +8,7 @@ SOURCES:=$(shell find . -name '*.go')
 AWS:=$(shell which 2>/dev/null aws)
 S3_TARGET=s3://dist-go
 ifeq ($(DATE_TAG),)
-DATE_TAG:=$(shell date '+%Y%m%d%H%M%S')
+DATE_TAG:=$(shell TZ=UTC git show -s --format=%cd --date=format-local:%Y%m%d%H%M%S HEAD)
 endif
 export DATE_TAG
 export GO111MODULE=on
@@ -36,7 +36,7 @@ all: $(PROJECT_NAME)
 
 $(PROJECT_NAME): $(SOURCES)
 	$(GOPATH)/bin/goimports -w -l .
-	$(GOROOT)/bin/go build -v -gcflags="-N -l" -ldflags=all="-X github.com/TrisTech/goupd.PROJECT_NAME=$(PROJECT_NAME) -X github.com/TrisTech/goupd.MODE=DEV -X github.com/TrisTech/goupd.GIT_TAG=$(GIT_TAG) -X github.com/TrisTech/goupd.DATE_TAG=$(DATE_TAG) $(GOLDFLAGS)"
+	$(GOROOT)/bin/go build -v -gcflags="-N -l" -ldflags=all="-X github.com/KarpelesLab/goupd.PROJECT_NAME=$(PROJECT_NAME) -X github.com/KarpelesLab/goupd.MODE=DEV -X github.com/KarpelesLab/goupd.GIT_TAG=$(GIT_TAG) -X github.com/KarpelesLab/goupd.DATE_TAG=$(DATE_TAG) $(GOLDFLAGS)"
 
 clean:
 	$(GOROOT)/bin/go clean
@@ -99,10 +99,10 @@ dist/$(PROJECT_NAME)_$(GIT_TAG)/$(PROJECT_NAME).%: $(SOURCES)
 
 ifneq ($(TARGET_ARCH),)
 dist/$(PROJECT_NAME)_$(GIT_TAG)/build_$(PROJECT_NAME).$(TARGET_ARCH): $(SOURCES)
-	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" $(GOROOT)/bin/go build -a -o "$@" -gcflags="-N -l -trimpath=$(shell pwd)" -ldflags=all="-s -w -X github.com/TrisTech/goupd.PROJECT_NAME=$(PROJECT_NAME) -X github.com/TrisTech/goupd.MODE=PROD -X github.com/TrisTech/goupd.GIT_TAG=$(GIT_TAG) -X github.com/TrisTech/goupd.DATE_TAG=$(DATE_TAG) $(GOLDFLAGS)"
+	@GOOS="$(TARGET_GOOS)" GOARCH="$(TARGET_GOARCH)" $(GOROOT)/bin/go build -a -o "$@" -gcflags="-N -l -trimpath=$(shell pwd)" -ldflags=all="-s -w -X github.com/KarpelesLab/goupd.PROJECT_NAME=$(PROJECT_NAME) -X github.com/KarpelesLab/goupd.MODE=PROD -X github.com/KarpelesLab/goupd.GIT_TAG=$(GIT_TAG) -X github.com/KarpelesLab/goupd.DATE_TAG=$(DATE_TAG) $(GOLDFLAGS)"
 endif
 
 update-make:
 	@echo "Updating Makefile ..."
-	@curl -s "https://raw.githubusercontent.com/TrisTech/make-go/master/Makefile" >Makefile.upd
+	@curl -s "https://raw.githubusercontent.com/KarpelesLab/make-go/master/Makefile" >Makefile.upd
 	@mv -f "Makefile.upd" "Makefile"
