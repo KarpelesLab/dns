@@ -7,7 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/TrisTech/goupd"
+	"github.com/KarpelesLab/goupd"
 )
 
 var (
