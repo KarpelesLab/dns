@@ -2,33 +2,33 @@ package main
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"log"
 	"net"
 	"runtime"
 
 	"github.com/KarpelesLab/dns/dnsmsg"
+	"github.com/KarpelesLab/shutdown"
 )
 
-func initTcp(ips []net.IP, errch chan<- error) {
+func initTcp(ips []net.IP) {
 	if len(ips) == 0 {
-		tcpListen(nil, errch)
+		tcpListen(nil)
 		return
 	}
 
 	for _, ip := range ips {
-		tcpListen(ip, errch)
+		tcpListen(ip)
 	}
 }
 
-func tcpListen(ip net.IP, errch chan<- error) {
+func tcpListen(ip net.IP) {
 	l, err := net.ListenTCP("tcp", &net.TCPAddr{IP: ip, Port: 53})
 	if err != nil {
 		// retry on port 8053 (probably not root)
 		l, err = net.ListenTCP("tcp", &net.TCPAddr{IP: ip, Port: 8053})
 		if err != nil {
-			errch <- fmt.Errorf("failed to listen TCP: %w", err)
+			shutdown.Fatalf("failed to listen TCP: %w", err)
 			return
 		}
 	}

@@ -8,8 +8,8 @@ import (
 	"os"
 
 	"github.com/KarpelesLab/dns/dnsmsg"
-	"github.com/boltdb/bolt"
 	"github.com/google/uuid"
+	bolt "go.etcd.io/bbolt"
 )
 
 var db *bolt.DB

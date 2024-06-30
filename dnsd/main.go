@@ -4,34 +4,13 @@ import (
 	"log"
 	"net"
 	"os"
-	"os/signal"
-	"syscall"
 
 	"github.com/KarpelesLab/goupd"
+	"github.com/KarpelesLab/shutdown"
 )
-
-var (
-	shutdownChannel = make(chan struct{})
-)
-
-func shutdown() {
-	log.Println("[main] shutting down...")
-	close(shutdownChannel)
-}
-
-func setupSignals() {
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt)
-	signal.Notify(c, syscall.SIGTERM)
-
-	go func() {
-		<-c
-		shutdown()
-	}()
-}
 
 func main() {
-	setupSignals()
+	shutdown.SetupSignals()
 	log.Printf("[main] Initializing dnsd...")
 	goupd.AutoUpdate(false)
 
@@ -46,18 +25,11 @@ func main() {
 
 	ips := getIps()
 
-	errch := make(chan error)
+	go initUdp(ips)
+	go initTcp(ips)
+	go initHttps(ips)
 
-	go initUdp(ips, errch)
-	go initTcp(ips, errch)
-	go initHttps(ips, errch)
-
-	select {
-	case err := <-errch:
-		log.Printf("[main] init failed: %s", err)
-		os.Exit(1)
-	case <-shutdownChannel:
-	}
+	shutdown.Wait()
 
 	log.Printf("[main] Bye bye")
 }

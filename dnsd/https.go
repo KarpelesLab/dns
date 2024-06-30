@@ -13,9 +13,10 @@ import (
 	"strings"
 
 	"github.com/KarpelesLab/dns/dnsmsg"
+	"github.com/KarpelesLab/shutdown"
 )
 
-func initHttps(ips []net.IP, errch chan<- error) {
+func initHttps(ips []net.IP) {
 	cfg := &tls.Config{
 		NextProtos:               []string{"h2", "http/1.1"},
 		MinVersion:               tls.VersionTLS12,
@@ -37,22 +38,22 @@ func initHttps(ips []net.IP, errch chan<- error) {
 	}
 
 	if len(ips) == 0 {
-		httpsListen(srv, nil, errch)
+		httpsListen(srv, nil)
 		return
 	}
 
 	for _, ip := range ips {
-		httpsListen(srv, ip, errch)
+		httpsListen(srv, ip)
 	}
 }
 
-func httpsListen(srv *http.Server, ip net.IP, errch chan<- error) {
+func httpsListen(srv *http.Server, ip net.IP) {
 	l, err := net.ListenTCP("tcp", &net.TCPAddr{IP: ip, Port: 853})
 	if err != nil {
 		// retry on port 8053 (probably not root)
 		l, err = net.ListenTCP("tcp", &net.TCPAddr{IP: ip, Port: 8853})
 		if err != nil {
-			errch <- fmt.Errorf("failed to listen TCP: %w", err)
+			shutdown.Fatalf("failed to listen TCP: %w", err)
 			return
 		}
 	}

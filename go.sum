@@ -4,11 +4,17 @@ github.com/KarpelesLab/goupd v0.2.8 h1:lc5hqd/jfkYeFouBR0qG1gGpCCdruoiOIrEDe6ihA
 github.com/KarpelesLab/goupd v0.2.8/go.mod h1:Yc3JOLMq0lVktd8VVA8tiJpREuJ72ajwmFMRvmf1diY=
 github.com/KarpelesLab/rndstr v0.0.1 h1:W7ajgLP+2E16p0VQOgDraFwPUJehQMQpQBF/AS8PAJA=
 github.com/KarpelesLab/rndstr v0.0.1/go.mod h1:Qyv1zfLX7UQx+7PhTm6+0ucZDKqmGZ0igtL/QymVp9U=
+github.com/KarpelesLab/shutdown v1.0.3 h1:kRBMZa/fG0klG/EOI6U3xC9wc/Pdk0EXastwfNF7uHo=
+github.com/KarpelesLab/shutdown v1.0.3/go.mod h1:rSfVclgiAXkfk9oARkCzQKHHTKp87ZiFN1sfFNiqL/A=
 github.com/TrisTech/goupd v0.1.2 h1:CUCyWwz1MbhBfFFBEsqQKigYbCkSfnqNtC2E9exDR2Q=
 github.com/TrisTech/goupd v0.1.2/go.mod h1:kxYe3iGXY+FvPUlbayaoPSpcNxGRYI2pNnqar3X9A6k=
 github.com/boltdb/bolt v1.3.1 h1:JQmyP4ZBrce+ZQu0dY660FMfatumYDLun9hBCUVIkF4=
 github.com/boltdb/bolt v1.3.1/go.mod h1:clJnj/oiGkjum5o1McbSZDSLxVThjynRyGBgiAx27Ps=
 github.com/google/uuid v1.1.1 h1:Gkbcsh/GbpXz7lPftLA3P6TYMwjCLYm83jiFQZF/3gY=
 github.com/google/uuid v1.1.1/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+go.etcd.io/bbolt v1.3.10 h1:+BqfJTcCzTItrop8mq/lbzL8wSGtj94UO/3U31shqG0=
+go.etcd.io/bbolt v1.3.10/go.mod h1:bK3UQLPJZly7IlNmV7uVHJDxfe5aK9Ll93e/74Y9oEQ=
 golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f h1:gWF768j/LaZugp8dyS4UwsslYCYz9XgFxvlgsn0n9H8=
 golang.org/x/sys v0.0.0-20200420163511-1957bb5e6d1f/go.mod h1:h1NjWce9XRLGQEsW7wpKNCjG9DtNlClVuFLEZdDNbEs=
+golang.org/x/sys v0.4.0 h1:Zr2JFtRQNX3BCZ8YtxRE9hNJYC8J6I1MVbMg6owUp18=
+golang.org/x/sys v0.4.0/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

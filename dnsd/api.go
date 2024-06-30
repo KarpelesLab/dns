@@ -11,8 +11,8 @@ import (
 
 	"github.com/KarpelesLab/dns/dnsmsg"
 	"github.com/KarpelesLab/rndstr"
-	"github.com/boltdb/bolt"
 	"github.com/google/uuid"
+	bolt "go.etcd.io/bbolt"
 )
 
 func handleApi(rw http.ResponseWriter, req *http.Request) {

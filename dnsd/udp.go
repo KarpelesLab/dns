@@ -2,24 +2,24 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"runtime"
 
 	"github.com/KarpelesLab/dns/dnsmsg"
+	"github.com/KarpelesLab/shutdown"
 )
 
-func initUdp(ips []net.IP, errch chan<- error) {
+func initUdp(ips []net.IP) {
 	if len(ips) == 0 {
-		listenUdp(nil, errch)
+		listenUdp(nil)
 	}
 	for _, ip := range ips {
-		listenUdp(ip, errch)
+		listenUdp(ip)
 	}
 }
 
-func listenUdp(ip net.IP, errch chan<- error) {
+func listenUdp(ip net.IP) {
 	cfg := &net.ListenConfig{Control: udpControl}
 
 	var ipstr string
@@ -34,7 +34,7 @@ func listenUdp(ip net.IP, errch chan<- error) {
 		// retry on port 8053 (probably not root)
 		l, err = cfg.ListenPacket(context.Background(), "udp", ipstr+":8053")
 		if err != nil {
-			errch <- fmt.Errorf("failed to listen UDP: %w", err)
+			shutdown.Fatalf("failed to listen UDP: %w", err)
 			return
 		}
 	}
