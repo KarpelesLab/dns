@@ -116,3 +116,12 @@ func (m *Message) String() string {
 
 	return strings.Join(res, " ")
 }
+
+func (m *Message) QueryString() string {
+	var res []string
+	for _, q := range m.Question {
+		res = append(res, q.String())
+	}
+
+	return strings.Join(res, " ")
+}
