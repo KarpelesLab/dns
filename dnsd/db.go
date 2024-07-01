@@ -41,33 +41,51 @@ func makeDb() {
 	// * entry: SOA (automatic)
 	// * entry: NS (ns0.shells.com ns1.shells.com)
 	// * HTTP
-	z, _, _, err := getZone("shellsnet.com", nil)
-	if err == nil {
-		log.Printf("zone id = %s", z)
-		return
-	}
-	if err != os.ErrNotExist {
-		// this is not the expected error
+	z, err := getOrCreateZone("shellsnet.com")
+	if err != nil {
 		log.Printf("[db] failed run test: %s", err)
 		return
 	}
 
-	// create zone
-	z, err = createZone()
-	if err != nil {
-		log.Printf("[db] failed to create zone: %s", err)
-	}
-
 	// add records
-	z.setRecord("", 60, dnsmsg.SOA, makeSOA())
 	z.setRecord("", 86400, dnsmsg.NS, "ns0.shells.com.", "ns1.shells.com.")
 	z.setRecord("", 86400, dnsmsg.TXT, "\"hello world\"")
 
-	// set domain
-	err = createDomain("shellsnet.com", z, nil)
+	z, err = getOrCreateZone("g-dns.net")
 	if err != nil {
-		log.Printf("[db] failed to create domain: %s", err)
+		log.Printf("[db] failed run test: %s", err)
+		return
 	}
+
+	z.setHandlerRecord("*", 86400, dnsmsg.A, "base32addr")
+}
+
+func getOrCreateZone(dns string) (dnsZone, error) {
+	z, _, _, err := getZone(dns, nil)
+	if err == nil {
+		return z, nil
+	}
+	if err != os.ErrNotExist {
+		return dnsZone{}, err
+	}
+
+	z, err = createZone()
+	if err != nil {
+		return dnsZone{}, err
+	}
+
+	// create SOA (minimum)
+	err = z.setRecord("", 60, dnsmsg.SOA, makeSOA())
+	if err != nil {
+		return dnsZone{}, err
+	}
+
+	err = createDomain(dns, z, nil)
+	if err != nil {
+		return dnsZone{}, err
+	}
+
+	return z, nil
 }
 
 func createDomain(dns string, zone dnsZone, ip net.IP) error {

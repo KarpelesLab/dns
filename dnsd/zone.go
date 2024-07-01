@@ -74,7 +74,7 @@ func (z dnsZone) getRecord(name []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, er
 				if err != nil {
 					return err
 				}
-				rdata, err := rec.RData()
+				rdata, err := rec.RData(name, typ)
 				if err != nil {
 					return err
 				}
@@ -113,7 +113,7 @@ func (z dnsZone) getRecord(name []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, er
 			if err != nil {
 				return err
 			}
-			rdata, err := rec.RData()
+			rdata, err := rec.RData(name, typ)
 			if err != nil {
 				return err
 			}
@@ -147,6 +147,34 @@ func (z dnsZone) setRecord(name string, ttl uint32, typ dnsmsg.Type, value ...st
 		Type:  typ,
 		TTL:   ttl,
 		Value: value,
+	}
+
+	// encode val
+	buf := rec.Bytes()
+
+	return db.Update(func(tx *bolt.Tx) error {
+		b, err := tx.CreateBucketIfNotExists([]byte("record"))
+		if err != nil {
+			return err
+		}
+
+		return b.Put(key, append(now(), buf...))
+	})
+}
+
+func (z dnsZone) setHandlerRecord(name string, ttl uint32, typ dnsmsg.Type, value ...string) error {
+	key := reverseDnsName([]byte(name))
+	key = append(z[:], key...)
+	if len(value) == 0 {
+		return errors.New("invalid record set")
+	}
+	key = append(key, 0, byte(typ>>8), byte(typ))
+
+	rec := &Record{
+		Type:    typ,
+		Handler: true,
+		TTL:     ttl,
+		Value:   value,
 	}
 
 	// encode val
