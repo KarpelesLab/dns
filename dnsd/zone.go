@@ -33,9 +33,6 @@ func (z dnsZone) handleQuery(pkt *dnsmsg.Message, q *dnsmsg.Question, sub []byte
 	}
 
 	rec, err := z.getRecord(sub, q.Type)
-	if len(rec) == 0 {
-		err = os.ErrNotExist
-	}
 	if err != nil {
 		// attempt to find authority
 		auth, err := z.getRecord(nil, dnsmsg.SOA)
@@ -50,7 +47,29 @@ func (z dnsZone) handleQuery(pkt *dnsmsg.Message, q *dnsmsg.Question, sub []byte
 	return nil
 }
 
+// getRecord will attempt to fetch records for name, and will fallback to * lookup if not found
 func (z dnsZone) getRecord(name []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, error) {
+	res, err := z.getExactRecord(name, name, typ)
+	if len(res) == 0 && err != nil {
+		err = os.ErrNotExist
+	}
+	if err == os.ErrNotExist && len(name) > 0 {
+		originalName := name
+		if pos := bytes.LastIndexByte(name, '.'); pos > 0 {
+			name = append(name[:pos+1], '*')
+		} else {
+			name = []byte{'*'}
+		}
+		res, err = z.getExactRecord(name, originalName, typ)
+		if len(res) == 0 && err != nil {
+			err = os.ErrNotExist
+		}
+	}
+	return res, err
+}
+
+// getExactRecord will return one exact record
+func (z dnsZone) getExactRecord(name, originalName []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, error) {
 	var res []*dnsmsg.Resource
 	var err error
 
@@ -74,14 +93,14 @@ func (z dnsZone) getRecord(name []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, er
 				if err != nil {
 					return err
 				}
-				rdata, err := rec.RData(name, typ)
+				rdata, err := rec.RData(originalName, typ)
 				if err != nil {
 					return err
 				}
 
 				for _, r := range rdata {
 					res = append(res, &dnsmsg.Resource{
-						Name:  string(name),
+						Name:  string(originalName),
 						Class: dnsmsg.IN,
 						Type:  r.GetType(),
 						TTL:   rec.TTL,
@@ -113,14 +132,14 @@ func (z dnsZone) getRecord(name []byte, typ dnsmsg.Type) ([]*dnsmsg.Resource, er
 			if err != nil {
 				return err
 			}
-			rdata, err := rec.RData(name, typ)
+			rdata, err := rec.RData(originalName, typ)
 			if err != nil {
 				return err
 			}
 
 			for _, r := range rdata {
 				res = append(res, &dnsmsg.Resource{
-					Name:  string(name),
+					Name:  string(originalName),
 					Class: dnsmsg.IN,
 					Type:  r.GetType(),
 					TTL:   rec.TTL,
@@ -163,11 +182,12 @@ func (z dnsZone) setRecord(name string, ttl uint32, typ dnsmsg.Type, value ...st
 }
 
 func (z dnsZone) setHandlerRecord(name string, ttl uint32, typ dnsmsg.Type, value ...string) error {
-	key := reverseDnsName([]byte(name))
-	key = append(z[:], key...)
 	if len(value) == 0 {
 		return errors.New("invalid record set")
 	}
+
+	key := reverseDnsName([]byte(name))
+	key = append(z[:], key...)
 	key = append(key, 0, byte(typ>>8), byte(typ))
 
 	rec := &Record{
