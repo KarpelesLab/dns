@@ -1,18 +1,22 @@
 module github.com/KarpelesLab/dns
 
-go 1.22.2
+go 1.23.0
 
 require (
 	github.com/KarpelesLab/goupd v0.4.4
+	github.com/KarpelesLab/rest v0.6.15
 	github.com/KarpelesLab/rndstr v0.0.1
 	github.com/KarpelesLab/shutdown v1.0.3
 	github.com/cockroachdb/pebble v1.1.2
 	github.com/google/uuid v1.6.0
-	golang.org/x/sys v0.21.0
+	golang.org/x/sys v0.35.0
 )
 
 require (
 	github.com/DataDog/zstd v1.4.5 // indirect
+	github.com/KarpelesLab/pjson v0.1.9 // indirect
+	github.com/KarpelesLab/typutil v0.2.29 // indirect
+	github.com/KarpelesLab/webutil v0.2.2 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/cockroachdb/errors v1.11.3 // indirect
