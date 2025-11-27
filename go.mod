@@ -7,6 +7,7 @@ require (
 	github.com/KarpelesLab/rest v0.6.15
 	github.com/KarpelesLab/rndstr v0.0.1
 	github.com/KarpelesLab/shutdown v1.0.3
+	github.com/KarpelesLab/unison v1.0.1
 	github.com/cockroachdb/pebble v1.1.2
 	github.com/google/uuid v1.6.0
 	golang.org/x/sys v0.35.0

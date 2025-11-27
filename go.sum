@@ -47,6 +47,8 @@ github.com/KarpelesLab/shutdown v1.0.3 h1:kRBMZa/fG0klG/EOI6U3xC9wc/Pdk0EXastwfN
 github.com/KarpelesLab/shutdown v1.0.3/go.mod h1:rSfVclgiAXkfk9oARkCzQKHHTKp87ZiFN1sfFNiqL/A=
 github.com/KarpelesLab/typutil v0.2.29 h1:lyo+5MAVOxDbZrTeotrhhLY6jfN+CwVrMm8ms/ZYsQc=
 github.com/KarpelesLab/typutil v0.2.29/go.mod h1:AAFzwyeM5datR6N5pGy8VrihZacfVS4ktC+AKp3VIrQ=
+github.com/KarpelesLab/unison v1.0.1 h1:zxD4ceSyln+jSD7v0IW7saR7oTPk1X7sYvxN/jAJs8o=
+github.com/KarpelesLab/unison v1.0.1/go.mod h1:ttBmAtHRoDZTpd2mQ78tqBj3Pui2Xcu/KfAMZIQCYh8=
 github.com/KarpelesLab/webutil v0.2.2 h1:FsUwiLAjMDZj9zaSL4hzg2SWgJa9tQzM1A1w15RAGHw=
 github.com/KarpelesLab/webutil v0.2.2/go.mod h1:AKTsmoimqwSdJHtZzBnvxcjQv3lgyw/GVJFVyXaDilU=
 github.com/alecthomas/template v0.0.0-20160405071501-a0175ee3bccc/go.mod h1:LOuyumcjzFXgccqObfd/Ljyb9UuFJ6TxHnclSeseNhc=
