@@ -164,6 +164,44 @@ func (c *context) parseRData(t Type, d []byte) (RData, error) {
 			return nil, err
 		}
 		return res, nil
+	// RFC 4034 - DNSSEC
+	case DNSKEY:
+		res := &RDataDNSKEY{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	case RRSIG:
+		res := &RDataRRSIG{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	case DS:
+		res := &RDataDS{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	case NSEC:
+		res := &RDataNSEC{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 5155 - NSEC3
+	case NSEC3:
+		res := &RDataNSEC3{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	case NSEC3PARAM:
+		res := &RDataNSEC3PARAM{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
 	}
 	return nil, fmt.Errorf("while parsing %s: %w", t.String(), ErrNotSupport)
 }
