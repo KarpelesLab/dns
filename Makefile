@@ -1,6 +1,6 @@
 #!/bin/make
 
-GOROOT:=$(shell PATH="/pkg/main/dev-lang.go/bin:$$PATH" go env GOROOT)
+GOROOT:=$(shell PATH="/pkg/main/dev-lang.go.dev/bin:$$PATH" go env GOROOT)
 GO_TAG:=$(shell /bin/sh -c 'eval `$(GOROOT)/bin/go tool dist env`; echo "$${GOOS}_$${GOARCH}"')
 GIT_TAG:=$(shell git rev-parse --short HEAD)
 GOPATH:=$(shell $(GOROOT)/bin/go env GOPATH)
