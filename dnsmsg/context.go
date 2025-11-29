@@ -3,7 +3,6 @@ package dnsmsg
 import (
 	"encoding/binary"
 	"io"
-	"log"
 	"strings"
 )
 
@@ -70,7 +69,6 @@ func (c *context) appendLabel(lbl string) error {
 
 	if !strings.HasSuffix(lbl, ".") {
 		if c.name == "" {
-			log.Printf("missing default name")
 			return ErrLabelInvalid
 		}
 		if lbl == "" || lbl == "@" {
@@ -101,13 +99,11 @@ func (c *context) appendLabel(lbl string) error {
 		pos := strings.IndexByte(lbl, '.')
 		if pos == 0 {
 			// got ".." in label?
-			log.Printf("bad name = %s", lbl)
 			return ErrLabelInvalid
 		}
 		if pos == -1 {
 			// we reached end of label
 			if len(lbl) == 0 {
-				log.Printf("bad name end = %s", lbl)
 				return ErrLabelInvalid
 			}
 			if len(lbl) > 63 {
@@ -148,6 +144,10 @@ func (c *context) readLabel(buf []byte) (string, int, error) {
 	var res []byte
 	var read int
 	readMode := true
+	// Track visited positions to detect compression pointer loops
+	visited := make(map[int]bool)
+	// Track the original buffer start position for forward pointer detection
+	startPos := len(c.rawMsg) - len(buf)
 
 	if c.marshal {
 		// simple read
@@ -163,6 +163,9 @@ func (c *context) readLabel(buf []byte) (string, int, error) {
 	}
 
 	for {
+		if len(buf) == 0 {
+			return string(res), read, ErrLabelInvalid
+		}
 		v := int(buf[0])
 		if readMode {
 			read += 1
@@ -183,6 +186,15 @@ func (c *context) readLabel(buf []byte) (string, int, error) {
 			if pos >= len(c.rawMsg) {
 				return string(res), read, ErrLabelInvalid
 			}
+			// Check for forward pointers (security: pointers should only point backwards)
+			if pos >= startPos {
+				return string(res), read, ErrLabelInvalid
+			}
+			// Check for pointer loops
+			if visited[pos] {
+				return string(res), read, ErrLabelInvalid
+			}
+			visited[pos] = true
 			buf = c.rawMsg[pos:]
 			continue
 		}
@@ -191,12 +203,17 @@ func (c *context) readLabel(buf []byte) (string, int, error) {
 		}
 
 		buf = buf[1:] // move buffer forward to skip len byte
-		if v >= len(buf) {
+		if v > len(buf) {
 			return string(res), read, ErrLabelInvalid
 		}
 
 		if readMode {
 			read += v
+		}
+
+		// Check total name length (max 255 per RFC 1035)
+		if len(res)+v+1 > 255 {
+			return string(res), read, ErrNameTooLong
 		}
 
 		res = append(res, buf[:v]...)

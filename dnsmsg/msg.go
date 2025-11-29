@@ -7,24 +7,38 @@ import (
 	"strings"
 )
 
+// Message represents a DNS message as defined in RFC 1035.
+// It contains the header fields, question section, and resource record sections
+// (answer, authority, additional). EDNS options (RFC 6891) are also supported.
 type Message struct {
-	// Header
-	ID   uint16
+	// ID is a 16-bit identifier assigned by the program that generates the query.
+	ID uint16
+	// Bits contains the header flags including QR, OPCODE, AA, TC, RD, RA, and RCODE.
 	Bits HeaderBits
 
-	Question   []*Question // QD
-	Answer     []*Resource // AN
-	Authority  []*Resource // NS
-	Additional []*Resource // AR
+	// Question contains the question section (queries being asked).
+	Question []*Question
+	// Answer contains the answer section (resource records answering the question).
+	Answer []*Resource
+	// Authority contains the authority section (NS records pointing to authoritative servers).
+	Authority []*Resource
+	// Additional contains the additional section (resource records with additional info).
+	Additional []*Resource
 
-	HasEDNS    bool     // If true, has EDNS options
-	Opts       []DnsOpt // EDNS Options
-	ReqUDPSize uint16   // requestor's UDP payload size
-	OptRCode   OptRCode // extended RCODE and flags
+	// HasEDNS indicates whether EDNS (RFC 6891) options are present.
+	HasEDNS bool
+	// Opts contains EDNS options when HasEDNS is true.
+	Opts []DnsOpt
+	// ReqUDPSize is the requestor's UDP payload size from EDNS.
+	ReqUDPSize uint16
+	// OptRCode contains extended RCODE and flags from EDNS.
+	OptRCode OptRCode
 
-	Base string // base name (always empty for parsed queries)
+	// Base is the default domain suffix for encoding (empty for parsed messages).
+	Base string
 }
 
+// New creates a new DNS message with a random transaction ID.
 func New() *Message {
 	msg := &Message{
 		ID: uint16(rand.Int31n(0xffff) + 1),
@@ -33,6 +47,8 @@ func New() *Message {
 	return msg
 }
 
+// MarshalBinary encodes the DNS message into wire format as defined in RFC 1035.
+// It implements the encoding.BinaryMarshaler interface.
 func (m *Message) MarshalBinary() ([]byte, error) {
 	c := &context{
 		labelMap: make(map[string]uint16),

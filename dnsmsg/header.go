@@ -2,6 +2,10 @@ package dnsmsg
 
 import "strings"
 
+// HeaderBits represents the flags and codes in a DNS message header.
+// It contains the QR (query/response), OPCODE, AA (authoritative answer),
+// TC (truncation), RD (recursion desired), RA (recursion available),
+// and RCODE (response code) fields as defined in RFC 1035 Section 4.1.1.
 type HeaderBits uint16
 
 const (

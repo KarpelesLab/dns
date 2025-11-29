@@ -6,12 +6,18 @@ import (
 	"strings"
 )
 
+// Resource represents a DNS resource record as defined in RFC 1035 Section 4.1.3.
+// It contains the record's name, type, class, TTL, and type-specific data.
 type Resource struct {
-	Name  string
-	Type  Type
+	// Name is the domain name to which this resource record pertains.
+	Name string
+	// Type specifies the type of resource record (e.g., A, AAAA, MX, etc.).
+	Type Type
+	// Class specifies the class of the data (typically IN for internet).
 	Class Class
-	TTL   uint32
-
+	// TTL is the time-to-live in seconds, indicating how long the record may be cached.
+	TTL uint32
+	// Data contains the type-specific resource record data.
 	Data RData
 }
 

@@ -5,12 +5,19 @@ import (
 	"strings"
 )
 
+// Question represents a DNS question as defined in RFC 1035 Section 4.1.2.
+// It specifies the domain name being queried, the query type, and the query class.
 type Question struct {
-	Name  string
-	Type  Type
+	// Name is the domain name being queried (QNAME).
+	Name string
+	// Type specifies the type of query (QTYPE), e.g., A, AAAA, MX, etc.
+	Type Type
+	// Class specifies the class of query (QCLASS), typically IN for internet.
 	Class Class
 }
 
+// NewQuery creates a new DNS query message for the specified domain name, class, and type.
+// The recursion desired (RD) flag is automatically set.
 func NewQuery(name string, class Class, typ Type) *Message {
 	msg := New()
 	msg.Bits |= hRecD // recursion desired

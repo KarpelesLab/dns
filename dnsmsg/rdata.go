@@ -8,13 +8,25 @@ import (
 	"strconv"
 )
 
+// RData is the interface implemented by all DNS resource record data types.
+// Each record type (A, AAAA, MX, TXT, etc.) has its own implementation.
 type RData interface {
-	// TODO
+	// String returns a human-readable representation of the record data.
 	String() string
+	// GetType returns the DNS record type (e.g., A, AAAA, MX).
 	GetType() Type
+	// encode writes the record data in wire format to the context.
 	encode(c *context) error
 }
 
+// RDataFromString parses a string representation into the appropriate RData type.
+// The format depends on the record type:
+//   - A: IPv4 address (e.g., "192.168.1.1")
+//   - AAAA: IPv6 address (e.g., "2001:db8::1")
+//   - MX: "preference server" (e.g., "10 mail.example.com.")
+//   - SOA: "mname rname serial refresh retry expire minimum"
+//   - TXT: quoted string (e.g., "\"hello world\"")
+//   - NS, CNAME, PTR: domain name (e.g., "ns1.example.com.")
 func RDataFromString(t Type, str string) (RData, error) {
 	switch t {
 	// RFC 1035
@@ -138,7 +150,7 @@ func (c *context) parseRData(t Type, d []byte) (RData, error) {
 		}
 		return &RDataMX{binary.BigEndian.Uint16(d[:2]), lbl}, nil
 	case TXT:
-		return RDataTXT(d), nil
+		return parseTXT(d)
 	// RFC 3596
 	case AAAA:
 		if len(d) != 16 {

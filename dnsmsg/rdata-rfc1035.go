@@ -6,6 +6,9 @@ import (
 	"strconv"
 )
 
+// RDataTXT represents a DNS TXT record.
+// Per RFC 1035, TXT records contain one or more character-strings,
+// each prefixed with a length byte (max 255 bytes per string).
 type RDataTXT string
 
 func (txt RDataTXT) GetType() Type {
@@ -17,8 +20,46 @@ func (txt RDataTXT) String() string {
 }
 
 func (txt RDataTXT) encode(c *context) error {
-	_, err := c.Write([]byte(txt))
-	return err
+	// Per RFC 1035, TXT RDATA consists of one or more character-strings.
+	// Each character-string is a length byte followed by that many characters.
+	// Maximum length per string is 255 bytes.
+	data := []byte(txt)
+	for len(data) > 0 {
+		chunkLen := len(data)
+		if chunkLen > 255 {
+			chunkLen = 255
+		}
+		// Write length byte
+		if _, err := c.Write([]byte{byte(chunkLen)}); err != nil {
+			return err
+		}
+		// Write chunk data
+		if _, err := c.Write(data[:chunkLen]); err != nil {
+			return err
+		}
+		data = data[chunkLen:]
+	}
+	return nil
+}
+
+// parseTXT parses TXT record data from wire format.
+// TXT RDATA is one or more <character-string>s, each prefixed with a length byte.
+func parseTXT(d []byte) (RDataTXT, error) {
+	var result []byte
+	pos := 0
+	for pos < len(d) {
+		if pos >= len(d) {
+			break
+		}
+		strLen := int(d[pos])
+		pos++
+		if pos+strLen > len(d) {
+			return "", ErrInvalidLen
+		}
+		result = append(result, d[pos:pos+strLen]...)
+		pos += strLen
+	}
+	return RDataTXT(result), nil
 }
 
 type RDataMX struct {

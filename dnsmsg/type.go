@@ -2,6 +2,9 @@ package dnsmsg
 
 //go:generate stringer -type=Type
 
+// Type represents a DNS resource record type as defined in RFC 1035 and subsequent RFCs.
+// Common types include A (IPv4 address), AAAA (IPv6 address), MX (mail exchange),
+// NS (nameserver), CNAME (canonical name), TXT (text), and SOA (start of authority).
 type Type uint16
 
 const (

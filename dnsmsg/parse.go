@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 )
 
+// Parse decodes a DNS message from wire format as defined in RFC 1035.
+// It returns the parsed Message or an error if the data is malformed.
 func Parse(d []byte) (*Message, error) {
 	msg := &Message{}
 	err := msg.UnmarshalBinary(d)
@@ -13,6 +15,8 @@ func Parse(d []byte) (*Message, error) {
 	return msg, nil
 }
 
+// UnmarshalBinary decodes a DNS message from wire format.
+// It implements the encoding.BinaryUnmarshaler interface.
 func (msg *Message) UnmarshalBinary(d []byte) error {
 	c := &context{rawMsg: d}
 
