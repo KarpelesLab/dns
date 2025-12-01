@@ -46,11 +46,12 @@ func RDataFromString(t Type, str string) (RData, error) {
 		return &RDataLabel{str, t}, nil
 	case NULL:
 		return &RDataRaw{nil, t}, nil
-	case WKS:
 	case PTR:
 		return &RDataLabel{str, t}, nil
 	case HINFO:
-	case MINFO:
+		hi := &RDataHINFO{}
+		_, err := fmt.Sscanf(str, "%q %q", &hi.CPU, &hi.OS)
+		return hi, err
 	case MX:
 		mx := &RDataMX{}
 		_, err := fmt.Sscanf(str, "%d %s", &mx.Pref, &mx.Server)
@@ -65,6 +66,33 @@ func RDataFromString(t Type, str string) (RData, error) {
 			return nil, errors.New("could not parse ipv6")
 		}
 		return &RDataIP{ip, t}, nil
+	// RFC 6672
+	case DNAME:
+		return &RDataLabel{str, t}, nil
+	// RFC 2782
+	case SRV:
+		srv := &RDataSRV{}
+		_, err := fmt.Sscanf(str, "%d %d %d %s", &srv.Priority, &srv.Weight, &srv.Port, &srv.Target)
+		return srv, err
+	// RFC 8659
+	case CAA:
+		caa := &RDataCAA{}
+		_, err := fmt.Sscanf(str, "%d %s %q", &caa.Flags, &caa.Tag, &caa.Value)
+		return caa, err
+	// RFC 7553
+	case URI:
+		uri := &RDataURI{}
+		_, err := fmt.Sscanf(str, "%d %d %q", &uri.Priority, &uri.Weight, &uri.Target)
+		return uri, err
+	// RFC 1183
+	case RP:
+		rp := &RDataRP{}
+		_, err := fmt.Sscanf(str, "%s %s", &rp.Mbox, &rp.Txt)
+		return rp, err
+	case AFSDB:
+		afsdb := &RDataAFSDB{}
+		_, err := fmt.Sscanf(str, "%d %s", &afsdb.Subtype, &afsdb.Hostname)
+		return afsdb, err
 	}
 	return nil, fmt.Errorf("while parsing %s string: %w", t.String(), ErrNotSupport)
 }
@@ -131,15 +159,12 @@ func (c *context) parseRData(t Type, d []byte) (RData, error) {
 		return &RDataLabel{lbl, t}, nil
 	case NULL:
 		return &RDataRaw{d, t}, nil
-	case WKS:
 	case PTR:
 		lbl, _, err := c.readLabel(d)
 		if err != nil {
 			return nil, err
 		}
 		return &RDataLabel{lbl, t}, nil
-	case HINFO:
-	case MINFO:
 	case MX:
 		if len(d) < 3 {
 			return nil, ErrInvalidLen
@@ -202,6 +227,97 @@ func (c *context) parseRData(t Type, d []byte) (RData, error) {
 			return nil, err
 		}
 		return res, nil
+	// RFC 4398 - CERT
+	case CERT:
+		res := &RDataCERT{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 8945 - TSIG
+	case TSIG:
+		res := &RDataTSIG{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 2930 - TKEY
+	case TKEY:
+		res := &RDataTKEY{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 2782 - SRV
+	case SRV:
+		res := &RDataSRV{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 6698 - TLSA
+	case TLSA:
+		res := &RDataTLSA{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 4255 - SSHFP
+	case SSHFP:
+		res := &RDataSSHFP{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 8659 - CAA
+	case CAA:
+		res := &RDataCAA{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 7553 - URI
+	case URI:
+		res := &RDataURI{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 3403 - NAPTR
+	case NAPTR:
+		res := &RDataNAPTR{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 1035 - HINFO
+	case HINFO:
+		res := &RDataHINFO{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 1183 - RP
+	case RP:
+		res := &RDataRP{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 1183 - AFSDB
+	case AFSDB:
+		res := &RDataAFSDB{}
+		if err := res.decode(c, d); err != nil {
+			return nil, err
+		}
+		return res, nil
+	// RFC 6672 - DNAME (same structure as CNAME)
+	case DNAME:
+		lbl, _, err := c.readLabel(d)
+		if err != nil {
+			return nil, err
+		}
+		return &RDataLabel{lbl, t}, nil
 	}
 	return nil, fmt.Errorf("while parsing %s: %w", t.String(), ErrNotSupport)
 }
