@@ -331,6 +331,61 @@ func TestRecordTypeTXTLong(t *testing.T) {
 	}
 }
 
+func TestRecordTypeTXTMultiString(t *testing.T) {
+	// Test parsing TXT from multiple quoted strings (like DKIM records)
+	input := `"v=DKIM1; k=rsa; p=MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEArbq1" "uYX1GIK3Gk9HNQ8RTVfbV2k6BH0hW9TtbF/EULE2qXkVuuX/h6DNxo"`
+	expected := "v=DKIM1; k=rsa; p=MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEArbq1uYX1GIK3Gk9HNQ8RTVfbV2k6BH0hW9TtbF/EULE2qXkVuuX/h6DNxo"
+
+	rdata, err := RDataFromString(TXT, input)
+	if err != nil {
+		t.Fatalf("failed to parse multi-string TXT: %s", err)
+	}
+
+	txt, ok := rdata.(RDataTXT)
+	if !ok {
+		t.Fatalf("expected RDataTXT, got %T", rdata)
+	}
+
+	if string(txt) != expected {
+		t.Errorf("TXT mismatch:\ngot:  %s\nwant: %s", string(txt), expected)
+	}
+
+	// Test round-trip: parse to wire format and back
+	msg := New()
+	msg.Answer = []*Resource{
+		{
+			Name:  "_dkim.example.com.",
+			Type:  TXT,
+			Class: IN,
+			TTL:   3600,
+			Data:  txt,
+		},
+	}
+
+	data, err := msg.MarshalBinary()
+	if err != nil {
+		t.Fatalf("failed to marshal: %s", err)
+	}
+
+	parsed, err := Parse(data)
+	if err != nil {
+		t.Fatalf("failed to parse: %s", err)
+	}
+
+	if len(parsed.Answer) != 1 {
+		t.Fatalf("expected 1 answer, got %d", len(parsed.Answer))
+	}
+
+	parsedTxt, ok := parsed.Answer[0].Data.(RDataTXT)
+	if !ok {
+		t.Fatalf("expected RDataTXT, got %T", parsed.Answer[0].Data)
+	}
+
+	if string(parsedTxt) != expected {
+		t.Errorf("round-trip TXT mismatch:\ngot:  %s\nwant: %s", string(parsedTxt), expected)
+	}
+}
+
 func TestRecordTypeCNAME(t *testing.T) {
 	msg := New()
 	msg.Answer = []*Resource{

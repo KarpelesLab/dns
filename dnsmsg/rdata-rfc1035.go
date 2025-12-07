@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"strconv"
+	"strings"
 )
 
 // RDataTXT represents a DNS TXT record.
@@ -40,6 +41,44 @@ func (txt RDataTXT) encode(c *context) error {
 		data = data[chunkLen:]
 	}
 	return nil
+}
+
+// parseTXTFromString parses a TXT record from text format (zone file style).
+// It handles both single quoted strings and multiple quoted strings separated by whitespace.
+// Examples:
+//   - "hello world"
+//   - "part1" "part2" "part3"
+func parseTXTFromString(str string) (RDataTXT, error) {
+	var result []byte
+	str = strings.TrimSpace(str)
+
+	for len(str) > 0 {
+		str = strings.TrimLeft(str, " \t")
+		if len(str) == 0 {
+			break
+		}
+
+		if str[0] != '"' {
+			return "", fmt.Errorf("expected quoted string, got: %s", str)
+		}
+
+		// Find the end of this quoted string using strconv.QuotedPrefix
+		quoted, err := strconv.QuotedPrefix(str)
+		if err != nil {
+			return "", fmt.Errorf("invalid quoted string: %w", err)
+		}
+
+		// Unquote this segment
+		s, err := strconv.Unquote(quoted)
+		if err != nil {
+			return "", fmt.Errorf("failed to unquote: %w", err)
+		}
+
+		result = append(result, s...)
+		str = str[len(quoted):]
+	}
+
+	return RDataTXT(result), nil
 }
 
 // parseTXT parses TXT record data from wire format.

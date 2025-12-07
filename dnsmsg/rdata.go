@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net"
-	"strconv"
 )
 
 // RData is the interface implemented by all DNS resource record data types.
@@ -57,8 +56,7 @@ func RDataFromString(t Type, str string) (RData, error) {
 		_, err := fmt.Sscanf(str, "%d %s", &mx.Pref, &mx.Server)
 		return mx, err
 	case TXT:
-		s, err := strconv.Unquote(str)
-		return RDataTXT(s), err
+		return parseTXTFromString(str)
 	// RFC 3596
 	case AAAA:
 		ip := net.ParseIP(str).To16()
