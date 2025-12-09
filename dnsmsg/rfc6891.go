@@ -43,6 +43,7 @@ func (opt *RDataOPT) decode(c *context, d []byte) error {
 		if err != nil {
 			return err
 		}
+		opt.Opts = append(opt.Opts, *o)
 	}
 	return nil
 }
