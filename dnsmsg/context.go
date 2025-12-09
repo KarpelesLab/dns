@@ -83,6 +83,12 @@ func (c *context) appendLabel(lbl string) error {
 		lbl = lbl[:len(lbl)-1]
 	}
 
+	// Handle root domain (empty name after stripping trailing dot)
+	if lbl == "" {
+		c.rawMsg = append(c.rawMsg, 0)
+		return nil
+	}
+
 	// append label to msg, compress if possible
 	for {
 		if p, ok := c.labelMap[strings.ToLower(lbl)]; ok {
