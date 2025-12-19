@@ -15,6 +15,8 @@ const (
 	hTrunc HeaderBits = 0x0200
 	hRecD  HeaderBits = 0x0100
 	hRecA  HeaderBits = 0x0080
+	// hZMask covers the reserved Z bits (bits 4-6) which must be zero per RFC 1035 §4.1.1
+	hZMask HeaderBits = 0x0070
 )
 
 func (h HeaderBits) IsResponse() bool {
@@ -93,6 +95,16 @@ func (h HeaderBits) GetRCode() RCode {
 
 func (h *HeaderBits) SetRCode(rc RCode) {
 	*h = (*h & ^HeaderBits(0xf)) | HeaderBits(rc)
+}
+
+// ClearZ explicitly zeroes the reserved Z bits (bits 4-6) as required by RFC 1035 §4.1.1.
+func (h *HeaderBits) ClearZ() {
+	*h &= ^hZMask
+}
+
+// Sanitized returns the header bits with the reserved Z bits cleared for wire encoding.
+func (h HeaderBits) Sanitized() HeaderBits {
+	return h & ^hZMask
 }
 
 func (h HeaderBits) String() string {

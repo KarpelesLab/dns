@@ -16,7 +16,7 @@ func TestParseQuery(t *testing.T) {
 		t.Fatalf("failed to parse: %s", err)
 	}
 
-	expected := "ID: 9071 Query rd NOERROR QD: google.com. IN A ReqUDPSize=4096"
+	expected := "ID: 9071 Query rd NOERROR QD: google.com. IN A ReqUDPSize=4096 OPT(code=10)"
 	if msg.String() != expected {
 		t.Errorf("unexpected result\ngot:  %s\nwant: %s", msg.String(), expected)
 	}

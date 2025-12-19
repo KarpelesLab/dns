@@ -59,7 +59,7 @@ func (m *Message) MarshalBinary() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = binary.Write(c, binary.BigEndian, m.Bits)
+	err = binary.Write(c, binary.BigEndian, m.Bits.Sanitized())
 	if err != nil {
 		return nil, err
 	}
