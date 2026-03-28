@@ -2,9 +2,11 @@ package dnsmsg
 
 import (
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 )
 
 // RData is the interface implemented by all DNS resource record data types.
@@ -82,6 +84,23 @@ func RDataFromString(t Type, str string) (RData, error) {
 		uri := &RDataURI{}
 		_, err := fmt.Sscanf(str, "%d %d %q", &uri.Priority, &uri.Weight, &uri.Target)
 		return uri, err
+	// RFC 6698 - TLSA
+	case TLSA:
+		tlsa := &RDataTLSA{}
+		var usage, selector, matchingType uint8
+		var hexStr string
+		_, err := fmt.Sscanf(str, "%d %d %d %s", &usage, &selector, &matchingType, &hexStr)
+		if err != nil {
+			return nil, err
+		}
+		tlsa.Usage = TLSACertUsage(usage)
+		tlsa.Selector = TLSASelector(selector)
+		tlsa.MatchingType = TLSAMatchingType(matchingType)
+		tlsa.CertData, err = hex.DecodeString(strings.ReplaceAll(hexStr, " ", ""))
+		if err != nil {
+			return nil, fmt.Errorf("invalid TLSA certificate data: %w", err)
+		}
+		return tlsa, nil
 	// RFC 1183
 	case RP:
 		rp := &RDataRP{}
