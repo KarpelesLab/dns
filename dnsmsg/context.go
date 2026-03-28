@@ -56,6 +56,60 @@ func (c *context) readLen(l int) ([]byte, error) {
 	return c.rawMsg[pos:c.rpos], nil
 }
 
+// appendLabelUncompressed writes a domain name in canonical wire format without
+// DNS name compression. Required by RFC 4034 for RRSIG signer names (Section 3.1.7)
+// and NSEC next domain names (Section 4.1.1).
+func (c *context) appendLabelUncompressed(lbl string) error {
+	if len(lbl) > 255 {
+		return ErrNameTooLong
+	}
+
+	// Normalize: resolve relative names, strip trailing dot
+	if !strings.HasSuffix(lbl, ".") {
+		if c.name == "" {
+			return ErrLabelInvalid
+		}
+		if lbl == "" || lbl == "@" {
+			lbl = c.name
+		} else {
+			lbl = lbl + "." + c.name
+		}
+		if len(lbl) > 255 {
+			return ErrNameTooLong
+		}
+	} else {
+		lbl = lbl[:len(lbl)-1]
+	}
+
+	if lbl == "" {
+		c.rawMsg = append(c.rawMsg, 0)
+		return nil
+	}
+
+	// Write each label without compression
+	for lbl != "" {
+		pos := strings.IndexByte(lbl, '.')
+		var label string
+		if pos == -1 {
+			label = lbl
+			lbl = ""
+		} else {
+			if pos == 0 {
+				return ErrLabelInvalid
+			}
+			label = lbl[:pos]
+			lbl = lbl[pos+1:]
+		}
+		if len(label) > 63 {
+			return ErrLabelTooLong
+		}
+		c.rawMsg = append(c.rawMsg, byte(len(label)))
+		c.rawMsg = append(c.rawMsg, label...)
+	}
+	c.rawMsg = append(c.rawMsg, 0) // root label
+	return nil
+}
+
 func (c *context) appendLabel(lbl string) error {
 	if len(lbl) > 255 {
 		return ErrNameTooLong

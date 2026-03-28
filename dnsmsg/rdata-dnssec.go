@@ -114,7 +114,8 @@ func (r *RDataRRSIG) encode(c *context) error {
 	if err := binary.Write(c, binary.BigEndian, r.KeyTag); err != nil {
 		return err
 	}
-	if err := c.appendLabel(r.SignerName); err != nil {
+	// RFC 4034 Section 3.1.7: Signer's Name MUST NOT use DNS name compression.
+	if err := c.appendLabelUncompressed(r.SignerName); err != nil {
 		return err
 	}
 	_, err := c.Write(r.Signature)
@@ -221,7 +222,8 @@ func (n *RDataNSEC) String() string {
 }
 
 func (n *RDataNSEC) encode(c *context) error {
-	if err := c.appendLabel(n.NextDomain); err != nil {
+	// RFC 4034 Section 4.1.1: Next Domain Name MUST NOT use DNS name compression.
+	if err := c.appendLabelUncompressed(n.NextDomain); err != nil {
 		return err
 	}
 	_, err := c.Write(n.TypeBitMap)
