@@ -159,15 +159,74 @@ func encodeRDataDirect(rr *dnsmsg.Resource) []byte {
 		buf.WriteByte(byte(data.DigestType))
 		buf.Write(data.Digest)
 		return buf.Bytes()
+	case *dnsmsg.RDataNSEC:
+		var buf bytes.Buffer
+		buf.Write(CanonicalName(data.NextDomain))
+		buf.Write(data.TypeBitMap)
+		return buf.Bytes()
+	case *dnsmsg.RDataCAA:
+		var buf bytes.Buffer
+		buf.WriteByte(data.Flags)
+		buf.WriteByte(byte(len(data.Tag)))
+		buf.WriteString(data.Tag)
+		buf.WriteString(data.Value)
+		return buf.Bytes()
+	case *dnsmsg.RDataTLSA:
+		var buf bytes.Buffer
+		buf.WriteByte(byte(data.Usage))
+		buf.WriteByte(byte(data.Selector))
+		buf.WriteByte(byte(data.MatchingType))
+		buf.Write(data.CertData)
+		return buf.Bytes()
+	case *dnsmsg.RDataSRV:
+		var buf bytes.Buffer
+		binary.Write(&buf, binary.BigEndian, data.Priority)
+		binary.Write(&buf, binary.BigEndian, data.Weight)
+		binary.Write(&buf, binary.BigEndian, data.Port)
+		buf.Write(CanonicalName(data.Target))
+		return buf.Bytes()
+	case *dnsmsg.RDataSSHFP:
+		var buf bytes.Buffer
+		buf.WriteByte(byte(data.Algorithm))
+		buf.WriteByte(byte(data.FPType))
+		buf.Write(data.Fingerprint)
+		return buf.Bytes()
+	case *dnsmsg.RDataHINFO:
+		var buf bytes.Buffer
+		buf.WriteByte(byte(len(data.CPU)))
+		buf.WriteString(data.CPU)
+		buf.WriteByte(byte(len(data.OS)))
+		buf.WriteString(data.OS)
+		return buf.Bytes()
+	case *dnsmsg.RDataRP:
+		var buf bytes.Buffer
+		buf.Write(CanonicalName(data.Mbox))
+		buf.Write(CanonicalName(data.Txt))
+		return buf.Bytes()
+	case *dnsmsg.RDataAFSDB:
+		var buf bytes.Buffer
+		binary.Write(&buf, binary.BigEndian, data.Subtype)
+		buf.Write(CanonicalName(data.Hostname))
+		return buf.Bytes()
+	case *dnsmsg.RDataNAPTR:
+		var buf bytes.Buffer
+		binary.Write(&buf, binary.BigEndian, data.Order)
+		binary.Write(&buf, binary.BigEndian, data.Preference)
+		buf.WriteByte(byte(len(data.Flags)))
+		buf.WriteString(data.Flags)
+		buf.WriteByte(byte(len(data.Service)))
+		buf.WriteString(data.Service)
+		buf.WriteByte(byte(len(data.Regexp)))
+		buf.WriteString(data.Regexp)
+		buf.Write(CanonicalName(data.Replacement))
+		return buf.Bytes()
+	case *dnsmsg.RDataURI:
+		var buf bytes.Buffer
+		binary.Write(&buf, binary.BigEndian, data.Priority)
+		binary.Write(&buf, binary.BigEndian, data.Weight)
+		buf.WriteString(data.Target)
+		return buf.Bytes()
 	default:
-		// Fallback: try to marshal through the message system
-		msg := dnsmsg.New()
-		msg.Answer = []*dnsmsg.Resource{rr}
-		if encoded, err := msg.MarshalBinary(); err == nil && len(encoded) > 12 {
-			// Skip header (12 bytes) and find the RDATA
-			// This is a rough approximation
-			return encoded[12:]
-		}
 		return nil
 	}
 }
