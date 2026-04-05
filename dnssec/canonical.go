@@ -48,25 +48,10 @@ func CanonicalRRset(rrset []*dnsmsg.Resource) []*dnsmsg.Resource {
 	return sorted
 }
 
-// encodeRData encodes the RDATA of a resource record to wire format.
+// encodeRData encodes the RDATA of a resource record in canonical wire format
+// for RRset sorting (RFC 4034 Section 6.3).
 func encodeRData(rr *dnsmsg.Resource) []byte {
-	if rr.Data == nil {
-		return nil
-	}
-
-	// Create a minimal message to encode the resource
-	msg := dnsmsg.New()
-	msg.Answer = []*dnsmsg.Resource{rr}
-
-	data, err := msg.MarshalBinary()
-	if err != nil {
-		return nil
-	}
-
-	// The RDATA is at the end of the message after the header and question
-	// This is a simplified extraction - for proper implementation we'd need
-	// direct access to the encode method
-	return data
+	return encodeRDataDirect(rr)
 }
 
 // BuildSignedData constructs the data to be signed/verified for an RRSIG
